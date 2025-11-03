@@ -16,6 +16,7 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setFullScreen(true); // Fullscreen aktivieren
         primaryStage.show();
+
     }
 
     public static void main(String[] args) {
