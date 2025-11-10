@@ -1,38 +1,55 @@
 package at.ac.hcw.chess.scenes;
 
-import at.ac.hcw.chess.Main;
-import javafx.application.Application;
-import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainMenu {
-    private VBox root;
-    private Main mainApp;
 
-    public MainMenu(Main mainApp){
-        this.mainApp = mainApp;
-        createLayout();
+    private final Stage stage;
+
+    public MainMenu(Stage stage) {
+        this.stage = stage;
     }
 
-    private void createLayout() {
-        Label title = new Label("Schach");
-        Button startButton = new Button("Spiel starten");
+    public void show() {
+        // === Menü-Buttons ===
+        Button startButton = new Button("Start Game");
+        Button settingsButton = new Button("Settings");
+        Button exitButton = new Button("Exit");
 
-        //startButton.setOnAction(e -> mainApp.showGameScreen());
+        // === Layout ===
+        VBox layout = new VBox(10, startButton, settingsButton, exitButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
 
-        root = new VBox(20, title, startButton);
-        root.setAlignment(Pos.CENTER);
+        // === Scene ===
+        Scene scene = new Scene(layout, 400, 300);
+        stage.setFullScreen(true);
+        stage.setTitle("Main Menu");
+        stage.setScene(scene);
+        stage.show();
+
+        // === Aktionen ===
+        startButton.setOnAction(e -> openGameScene());
+        settingsButton.setOnAction(e -> openSettingsScene());
+        exitButton.setOnAction(e -> stage.close());
     }
 
-    public Parent getView(){
-        return this.root;
+    private void startGame() {
+        show();
+        /*VBox layout = new VBox(new Button("Zurück zum Menü"));
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
+        Scene gameScene = new Scene(layout, 400, 300);
+        stage.setScene(gameScene);
+
+         */
     }
 
+    private void openSettingsScene() {
+        VBox layout = new VBox(new Button("Settings Screen"));
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
+        Scene settingsScene = new Scene(layout, 400, 300);
+        stage.setScene(settingsScene);
+    }
 }

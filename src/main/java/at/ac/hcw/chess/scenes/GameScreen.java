@@ -1,17 +1,36 @@
 package at.ac.hcw.chess.scenes;
 
 import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class GameScreen {
-    public void initGame(Stage primaryStage){
-        StackPane root = new StackPane(); // Einfacher Container
-        Scene scene = new Scene(root, 800, 600); // Standardgröße, wird Fullscreen überschrieben
 
-        primaryStage.setTitle("GameScreen");
-        primaryStage.setScene(scene);
-        primaryStage.setFullScreen(true); // Fullscreen aktivieren
-        primaryStage.show();
+    private final Stage stage;
+
+    public GameScreen(Stage stage) {
+        this.stage = stage;
+    }
+
+    public void show() {
+        // === Menü-Buttons ===
+        Button startButton = new Button("Game Screen");
+        Button settingsButton = new Button("Settings");
+        Button exitButton = new Button("Exit");
+
+        // === Layout ===
+        VBox layout = new VBox(10, startButton, settingsButton, exitButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
+
+        // === Scene ===
+        Scene scene = new Scene(layout, 400, 300);
+        stage.setFullScreen(true);
+        stage.setTitle("Main Menu");
+        stage.setScene(scene);
+        stage.show();
+
+        // === Aktionen ===
+        exitButton.setOnAction(e -> stage.close());
     }
 }

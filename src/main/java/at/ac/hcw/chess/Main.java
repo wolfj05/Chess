@@ -1,27 +1,41 @@
 package at.ac.hcw.chess;
 
+import at.ac.hcw.chess.gameutils.Game;
+import at.ac.hcw.chess.scenes.GameScreen;
 import at.ac.hcw.chess.scenes.MainMenu;
+import at.ac.hcw.chess.scenes.SceneManager;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main extends Application {
 
-    private Stage primaryStage;
+    Game game = new Game();
+    String currentScene = "main";
 
     @Override
-    public void start(Stage stage) {
-        this.primaryStage = stage;
-        primaryStage.setTitle("Schach");
-        showStartScreen();
-        primaryStage.show();
+    public void start(Stage primaryStage) {
+        SceneManager sceneManager = new SceneManager(primaryStage);
+
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.0 / 60), e -> {
+            update();
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
     }
 
-    public void showStartScreen() {
-        MainMenu startScreen = new MainMenu(this);
-        Scene scene = new Scene(startScreen.getView(), 800, 600);
-        primaryStage.setScene(scene);
+    private void update() {
+        /*
+        switch(currentScene){
+            case "main": mainMenu.show(); break;
+            case "game": gameScreen.show(); break;
+        }
+
+         */
     }
 
     public static void main(String[] args) {
