@@ -8,6 +8,10 @@ public abstract class Piece {
     Square square;
     boolean movable;
 
+    public Piece(Player player) {
+        this.player = player;
+    }
+
     abstract void calcValidMoves();  //calc ist SLANG für calculate (Das wissen viele nicht)
 
 }

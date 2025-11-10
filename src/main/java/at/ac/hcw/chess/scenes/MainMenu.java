@@ -7,49 +7,25 @@ import javafx.stage.Stage;
 
 public class MainMenu {
 
-    private final Stage stage;
+    private final SceneManager sceneManager;
+    private Scene scene;
 
-    public MainMenu(Stage stage) {
-        this.stage = stage;
+    public MainMenu(SceneManager sceneManager) {
+        this.sceneManager = sceneManager;
+        createScene();
+    }
+
+    private void createScene() {
+        Button startButton = new Button("Start Game");
+        VBox layout = new VBox(10, startButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
+        scene = new Scene(layout, 400, 300);
+
+        startButton.setOnAction(e -> sceneManager.startGame());
     }
 
     public void show() {
-        // === Menü-Buttons ===
-        Button startButton = new Button("Start Game");
-        Button settingsButton = new Button("Settings");
-        Button exitButton = new Button("Exit");
-
-        // === Layout ===
-        VBox layout = new VBox(10, startButton, settingsButton, exitButton);
-        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
-
-        // === Scene ===
-        Scene scene = new Scene(layout, 400, 300);
-        stage.setFullScreen(true);
-        stage.setTitle("Main Menu");
-        stage.setScene(scene);
-        stage.show();
-
-        // === Aktionen ===
-        startButton.setOnAction(e -> openGameScene());
-        settingsButton.setOnAction(e -> openSettingsScene());
-        exitButton.setOnAction(e -> stage.close());
-    }
-
-    private void startGame() {
-        show();
-        /*VBox layout = new VBox(new Button("Zurück zum Menü"));
-        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
-        Scene gameScene = new Scene(layout, 400, 300);
-        stage.setScene(gameScene);
-
-         */
-    }
-
-    private void openSettingsScene() {
-        VBox layout = new VBox(new Button("Settings Screen"));
-        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
-        Scene settingsScene = new Scene(layout, 400, 300);
-        stage.setScene(settingsScene);
+        sceneManager.getStage().setScene(scene);
+        sceneManager.getStage().setFullScreen(true);
     }
 }

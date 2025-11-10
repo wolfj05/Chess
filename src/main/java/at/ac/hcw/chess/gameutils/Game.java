@@ -11,8 +11,9 @@ public class Game {
 
     public Game() {
         this.board = new Board();
-        this.players[0] = new Player();
-        this.players[1] = new Player();
+        this.players[0] = new Player("White");
+        this.players[1] = new Player("Black");
+        currentTurn = this.players[0];
     }
 
     public Board getBoard() {
