@@ -21,6 +21,11 @@ public class Square {
         this.isValidMove = isValidMove;
     }
 
+    public Square(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
     public int getRow() {
         return row;
     }
@@ -37,11 +42,11 @@ public class Square {
         this.col = col;
     }
 
-    public Piece getP() {
+    public Piece getPiece() {
         return p;
     }
 
-    public void setP(Piece p) {
+    public void setPiece(Piece p) {
         this.p = p;
     }
 

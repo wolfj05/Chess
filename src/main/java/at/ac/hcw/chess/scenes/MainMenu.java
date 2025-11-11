@@ -1,38 +1,31 @@
 package at.ac.hcw.chess.scenes;
 
-import at.ac.hcw.chess.Main;
-import javafx.application.Application;
-import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainMenu {
-    private VBox root;
-    private Main mainApp;
 
-    public MainMenu(Main mainApp){
-        this.mainApp = mainApp;
-        createLayout();
+    private final SceneManager sceneManager;
+    private Scene scene;
+
+    public MainMenu(SceneManager sceneManager) {
+        this.sceneManager = sceneManager;
+        createScene();
     }
 
-    private void createLayout() {
-        Label title = new Label("Schach");
-        Button startButton = new Button("Spiel starten");
+    private void createScene() {
+        Button startButton = new Button("Start Game");
+        VBox layout = new VBox(10, startButton);
+        layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
+        scene = new Scene(layout, 400, 300);
 
-        //startButton.setOnAction(e -> mainApp.showGameScreen());
-
-        root = new VBox(20, title, startButton);
-        root.setAlignment(Pos.CENTER);
+        startButton.setOnAction(e -> sceneManager.startGame());
     }
 
-    public Parent getView(){
-        return this.root;
+    public void show() {
+        sceneManager.getStage().setScene(scene);
+        sceneManager.getStage().setFullScreen(true);
     }
-
 }
