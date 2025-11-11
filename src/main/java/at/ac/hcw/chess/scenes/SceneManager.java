@@ -7,9 +7,11 @@ public class SceneManager {
     private final Stage stage;
     private final GameScreen gameScreen;
     private final MainMenu mainMenu;
+    private final Game game;
 
-    public SceneManager(Stage stage) {
+    public SceneManager(Stage stage, Game game) {
         this.stage = stage;
+        this.game = game;
         gameScreen = new GameScreen(this);
         mainMenu = new MainMenu(this);
     }
@@ -20,11 +22,14 @@ public class SceneManager {
     }
 
     public void startGame() {
-        Game game = new Game();
-        gameScreen.show(game);       // starts timeline automatically
+        gameScreen.show();       // starts timeline automatically
     }
 
     public Stage getStage() {
         return stage;
+    }
+
+    public Game getGame() {
+        return game;
     }
 }

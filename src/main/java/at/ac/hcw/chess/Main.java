@@ -16,7 +16,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        SceneManager sceneManager = new SceneManager(primaryStage);
+        Game game = new Game();
+        SceneManager sceneManager = new SceneManager(primaryStage, game);
         sceneManager.showMainMenu(); // start with the main menu
         primaryStage.setTitle("Chess");
         primaryStage.show();

@@ -42,11 +42,11 @@ public class Square {
         this.col = col;
     }
 
-    public Piece getP() {
+    public Piece getPiece() {
         return p;
     }
 
-    public void setP(Piece p) {
+    public void setPiece(Piece p) {
         this.p = p;
     }
 
