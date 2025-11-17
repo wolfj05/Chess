@@ -17,12 +17,11 @@ public class SceneManager {
     }
 
     public void showMainMenu() {
-        gameScreen.stopTimeline();  // stop updates if leaving game
         mainMenu.show();
     }
 
     public void startGame() {
-        gameScreen.show();       // starts timeline automatically
+        gameScreen.show();
     }
 
     public Stage getStage() {
