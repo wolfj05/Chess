@@ -15,8 +15,8 @@ public class Move {
     private final Class<? extends Piece> promotionTarget; // z. B. Queen.class
 
     private final boolean isCastle;
-    private final boolean isEnPassant;
-    private final boolean isDoublePawnPush;
+    private boolean isEnPassant;
+    private boolean isDoublePawnPush;
 
     public Move(int fromX, int fromY,
                 int toX, int toY,
@@ -59,6 +59,14 @@ public class Move {
     public boolean isCastle() { return isCastle; }
     public boolean isEnPassant() { return isEnPassant; }
     public boolean isDoublePawnPush() { return isDoublePawnPush; }
+
+    public void setEnPassant(boolean v){
+        this.isEnPassant = v;
+    }
+
+    public void setDoublePawnPush(boolean doublePawnPush) {
+        isDoublePawnPush = doublePawnPush;
+    }
 
     @Override
     public String toString() {

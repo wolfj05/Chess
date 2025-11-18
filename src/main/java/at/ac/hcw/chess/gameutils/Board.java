@@ -7,6 +7,7 @@ import java.util.List;
 public class Board {
     Square[][] board = new Square[8][8];
     Player[] players;
+    private Move lastMove;
 
     public Board(Player[] players, boolean empty){
         this.players = players;
@@ -68,6 +69,10 @@ public class Board {
         return sq != null ? sq.getPiece() : null;
     }
 
+    public Move getLastMove() {
+        return lastMove;
+    }
+
     public void makeMove(Move move) {
 
         int x1 = move.getFromX();
@@ -85,9 +90,10 @@ public class Board {
         }
 
         if (move.isEnPassant()) {
-            int dir = (piece.getPlayer().getColor().equals("White")) ? -1 : 1;
-            Square pawnSquare = getSquare(x2, y2 + dir);
-            pawnSquare.setPiece(null);
+            int dir = piece.getPlayer().getColor().equals("White") ? -1 : 1;
+
+            Square pawnSquare = getSquare(move.getToX(), move.getToY() + dir);
+            pawnSquare.setPiece(null);   // gegnerischen Bauern entfernen
         }
 
         from.setPiece(null);
@@ -123,8 +129,12 @@ public class Board {
             }
         }
 
+        if (piece instanceof Pawn && Math.abs(y2 - y1) == 2) {
+            move.setDoublePawnPush(true);
+        }
+
         // 6) Double pawn push (für späteres En Passant Tracking)
-        //lastMoveWasDoublePawnPush = move.isDoublePush;
+        this.lastMove = move;
 
         piece.setHasMoved(true);
     }
@@ -190,6 +200,7 @@ public class Board {
 
     public Board deepCopy() {
         Board copy = new Board(players, true);
+        copy.lastMove = this.lastMove;
 
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {

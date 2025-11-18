@@ -66,7 +66,29 @@ public class Pawn extends Piece{
             }
         }
 
-        // TODO: en passant (optional, falls du willst baue ich es dir)
+        Move last = board.getLastMove();
+        if (last != null && last.isDoublePawnPush()) {
+
+            Piece lp = last.getMovedPiece();
+            if (lp instanceof Pawn && lp.getPlayer() != this.getPlayer()) {
+
+                int enemyX = last.getToX();
+                int enemyY = last.getToY();
+
+                // steht der gegnerische Bauer direkt links oder rechts?
+                if (Math.abs(enemyX - x) == 1 && enemyY == y) {
+
+                    int targetY = y + dir; // wo dein Bauer hinzieht
+
+                    if (board.isInside(enemyX, targetY) && board.getPiece(enemyX, targetY) == null) {
+
+                        Move enPassantMove = new Move(x, y, enemyX, targetY, this, lp, false, null, false, true, false);
+                        enPassantMove.setEnPassant(true);
+                        moves.add(enPassantMove);
+                    }
+                }
+            }
+        }
 
         return moves;
     }
