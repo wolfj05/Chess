@@ -5,7 +5,7 @@ import javafx.stage.Stage;
 
 public class SceneManager {
     private final Stage stage;
-    private final GameScreen gameScreen;
+    private GameScreen gameScreen;
     private final MainMenu mainMenu;
     private final Game game;
 
@@ -21,7 +21,10 @@ public class SceneManager {
     }
 
     public void startGame() {
-        gameScreen.show();
+        game.startGame();
+        GameScreen gs = new GameScreen(this);
+        this.gameScreen = gs;
+        gs.show();
     }
 
     public Stage getStage() {
@@ -30,5 +33,12 @@ public class SceneManager {
 
     public Game getGame() {
         return game;
+    }
+
+    public void restartGame(){
+        game.restartGame();
+        GameScreen gs = new GameScreen(this);
+        this.gameScreen = gs;
+        gs.show();
     }
 }

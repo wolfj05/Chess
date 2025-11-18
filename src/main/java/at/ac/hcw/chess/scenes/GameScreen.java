@@ -23,6 +23,7 @@ public class GameScreen {
 
     private GridPane squareGrid;
     private StackPane gameView;
+    private StackPane gameOverOverlay = null;
 
     private double squareSize;
     private Piece selectedPiece = null;
@@ -109,6 +110,9 @@ public class GameScreen {
                 -fx-background-radius: 10;
                 -fx-padding: 10 20 10 20;
                 """);
+        restartButton.setOnAction(e -> {
+            sceneManager.restartGame();
+        });
 
         Button settingsButton = new Button("Settings");
         settingsButton.setStyle("""
@@ -125,10 +129,13 @@ public class GameScreen {
 
         HBox layout = new HBox(sidebar, gameView, backButton);
         layout.setStyle("""
-                -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
-                """);
+        -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
+        """);
 
-        scene = new Scene(layout, 1920, 1080);
+        StackPane root = new StackPane();
+        root.getChildren().add(layout);
+
+        scene = new Scene(root, 1920, 1080);
 
         backButton.setOnAction(e -> sceneManager.showMainMenu());
     }
@@ -187,10 +194,12 @@ public class GameScreen {
                 isLegalMove = true;
 
                 if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
-                    System.out.println("Checkmate! " +
-                            (game.getCurrentTurn() == game.getPlayers()[0] ? "Black wins" : "White wins"));
+                    String winner = (game.getCurrentTurn() == game.getPlayers()[0])
+                            ? "Black wins!"
+                            : "White wins!";
+                    showGameOverOverlay("Checkmate!\n" + winner);
                 } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
-                    System.out.println("Stalemate! Draw!");
+                    showGameOverOverlay("Stalemate!\nDraw");
                 }
                 break;
             }
@@ -286,5 +295,66 @@ public class GameScreen {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setFullScreen(true);
         sceneManager.getStage().setTitle("Chess");
+    }
+
+    private void showGameOverOverlay(String message) {
+        if (gameOverOverlay != null) return;
+
+        gameOverOverlay = new StackPane();
+        gameOverOverlay.setStyle("""
+        -fx-background-color: rgba(0, 0, 0, 0.65);
+    """);
+
+        gameOverOverlay.setPrefSize(
+                scene.getWidth(),
+                scene.getHeight()
+        );
+
+        VBox box = new VBox(20);
+        box.setAlignment(Pos.CENTER);
+
+        javafx.scene.control.Label label = new javafx.scene.control.Label(message);
+        label.setStyle("""
+        -fx-text-fill: white;
+        -fx-font-size: 64px;
+        -fx-font-weight: bold;
+    """);
+
+        Button restart = new Button("Restart Game");
+        restart.setStyle("""
+        -fx-background-color: #ffffff;
+        -fx-text-fill: black;
+        -fx-font-size: 24px;
+        -fx-padding: 12 24 12 24;
+        -fx-background-radius: 12;
+    """);
+        restart.setOnAction(e -> {
+            sceneManager.restartGame();
+        });
+
+        Button back = new Button("Back to Menu");
+        back.setStyle("""
+        -fx-background-color: #ffffff;
+        -fx-text-fill: black;
+        -fx-font-size: 24px;
+        -fx-padding: 12 24 12 24;
+        -fx-background-radius: 12;
+    """);
+        back.setOnAction(e -> sceneManager.showMainMenu());
+
+        box.getChildren().addAll(label, restart, back);
+
+        gameOverOverlay.getChildren().add(box);
+
+        // 🎯 Auf oberster Ebene einfügen
+        StackPane root = (StackPane) scene.getRoot();
+        root.getChildren().add(gameOverOverlay);
+    }
+
+    private void hideGameOverOverlay() {
+        if (gameOverOverlay != null) {
+            gameView.getChildren().remove(gameOverOverlay);
+            gameOverOverlay = null;
+        }
     }
 }

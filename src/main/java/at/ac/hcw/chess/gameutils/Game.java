@@ -42,4 +42,14 @@ public class Game {
             currentTurn = players[0];
         }
     }
+
+    public void startGame() {
+        this.board = new Board(players, false);
+
+        currentTurn = players[0];
+    }
+
+    public void restartGame() {
+        startGame();
+    }
 }
