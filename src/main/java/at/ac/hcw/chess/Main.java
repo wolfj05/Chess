@@ -8,9 +8,12 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.util.Objects;
 
 public class Main extends Application {
 
@@ -20,6 +23,7 @@ public class Main extends Application {
         SceneManager sceneManager = new SceneManager(primaryStage, game);
         sceneManager.showMainMenu(); // start with the main menu
         primaryStage.setTitle("Chess");
+        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_king.png"))));
         primaryStage.show();
     }
 

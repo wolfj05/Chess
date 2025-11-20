@@ -15,12 +15,9 @@ import javafx.scene.Node;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
-import javafx.util.Duration;
-import java.util.Objects;
 
 public class GameScreen {
 
@@ -192,7 +189,7 @@ public class GameScreen {
         }
 
         // Move ausführen
-        boolean isLegalMove = false;
+        boolean isValidMove = false;
         for (Move m : legalMovesForSelected) {
             if (m.getToX() == x && m.getToY() == y) {
                 game.getBoard().makeMove(m);
@@ -201,7 +198,7 @@ public class GameScreen {
                 selectedPiece = null;
                 game.switchTurn();
                 highlightKingInCheck(game.getCurrentTurn());
-                isLegalMove = true;
+                isValidMove = true;
 
                 if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
                     String winner = (game.getCurrentTurn() == game.getPlayers()[0])
@@ -216,7 +213,7 @@ public class GameScreen {
         }
 
         // Neue Auswahl eigener Figur
-        if (!isLegalMove && piece != null && piece.getPlayer() == game.getCurrentTurn()) {
+        if (!isValidMove && piece != null && piece.getPlayer() == game.getCurrentTurn()) {
             clearBlueHighlights();
             selectPiece(piece);
         }

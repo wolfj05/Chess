@@ -83,7 +83,6 @@ public class Pawn extends Piece{
                     if (board.isInside(enemyX, targetY) && board.getPiece(enemyX, targetY) == null) {
 
                         Move enPassantMove = new Move(x, y, enemyX, targetY, this, lp, false, null, false, true, false);
-                        enPassantMove.setEnPassant(true);
                         moves.add(enPassantMove);
                     }
                 }
