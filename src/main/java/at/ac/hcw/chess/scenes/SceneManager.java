@@ -25,6 +25,11 @@ public class SceneManager {
         gameScreen.show();       // starts timeline automatically
     }
 
+    public void exitGame(){
+        javafx.application.Platform.exit();
+        System.exit(0);
+    };
+
     public Stage getStage() {
         return stage;
     }
