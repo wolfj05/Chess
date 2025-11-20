@@ -1,5 +1,7 @@
 package at.ac.hcw.chess.gameutils;
 
+import at.ac.hcw.chess.pieces.Piece;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +16,7 @@ public class Game {
         this.players[1] = new Player("Black");
         currentTurn = this.players[0];
 
-        this.board = new Board(this.players);
+        this.board = new Board(this.players, false);
     }
 
     public Player[] getPlayers() {
@@ -31,5 +33,23 @@ public class Game {
 
     public Board getBoard() {
         return board;
+    }
+
+    public void switchTurn(){
+        if (currentTurn == players[0]){
+            currentTurn = players[1];
+        } else {
+            currentTurn = players[0];
+        }
+    }
+
+    public void startGame() {
+        this.board = new Board(players, false);
+
+        currentTurn = players[0];
+    }
+
+    public void restartGame() {
+        startGame();
     }
 }

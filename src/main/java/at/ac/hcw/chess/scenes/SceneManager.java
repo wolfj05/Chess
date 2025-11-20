@@ -5,7 +5,7 @@ import javafx.stage.Stage;
 
 public class SceneManager {
     private final Stage stage;
-    private final GameScreen gameScreen;
+    private GameScreen gameScreen;
     private final MainMenu mainMenu;
     private final Game game;
 
@@ -17,12 +17,14 @@ public class SceneManager {
     }
 
     public void showMainMenu() {
-        gameScreen.stopTimeline();  // stop updates if leaving game
         mainMenu.show();
     }
 
     public void startGame() {
-        gameScreen.show();       // starts timeline automatically
+        game.startGame();
+        GameScreen gs = new GameScreen(this);
+        this.gameScreen = gs;
+        gs.show();
     }
 
     public void exitGame(){
@@ -36,5 +38,12 @@ public class SceneManager {
 
     public Game getGame() {
         return game;
+    }
+
+    public void restartGame(){
+        game.restartGame();
+        GameScreen gs = new GameScreen(this);
+        this.gameScreen = gs;
+        gs.show();
     }
 }
