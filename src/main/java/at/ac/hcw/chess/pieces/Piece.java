@@ -60,6 +60,6 @@ public abstract class Piece {
         this.imageView = imageView;
     }
 
-    public abstract List<Move> calcValidMoves(Board board, int x, int y);
+    public abstract List<Move> calcValidMoves(Board board, int x, int y); //CALC ist btw Slang für Calculate
 
 }
