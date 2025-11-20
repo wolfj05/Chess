@@ -14,6 +14,13 @@ import javafx.scene.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
+import javafx.util.Duration;
+import java.util.Objects;
 
 public class GameScreen {
 
@@ -38,10 +45,12 @@ public class GameScreen {
     }
 
     private void createScene() {
-        // --- Board Image ---
-        ImageView boardView = new ImageView(new Image("/board.png"));
+        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+        double screenHeight = Screen.getPrimary().getBounds().getHeight();
+        Image boardImage = new Image("/board.png");
+        ImageView boardView = new ImageView(boardImage);
         boardView.setPreserveRatio(true);
-        boardView.setFitHeight(1000);
+        boardView.setFitHeight(screenHeight*.9); // schöne Größe
         boardView.setSmooth(true);
 
         // --- GameView StackPane ---
@@ -124,6 +133,7 @@ public class GameScreen {
                 """);
 
         sidebar.getChildren().addAll(restartButton, settingsButton);
+
         StackPane.setAlignment(backButton, Pos.TOP_RIGHT);
         StackPane.setMargin(backButton, new Insets(10, 10, 0, 0));
 
@@ -293,7 +303,10 @@ public class GameScreen {
 
     public void show() {
         sceneManager.getStage().setScene(scene);
+        sceneManager.getStage().setFullScreenExitHint("");
+        sceneManager.getStage().setFullScreenExitKeyCombination(javafx.scene.input.KeyCombination.NO_MATCH);
         sceneManager.getStage().setFullScreen(true);
+        sceneManager.getStage().setResizable(false);
         sceneManager.getStage().setTitle("Chess");
     }
 

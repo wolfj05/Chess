@@ -27,6 +27,11 @@ public class SceneManager {
         gs.show();
     }
 
+    public void exitGame(){
+        javafx.application.Platform.exit();
+        System.exit(0);
+    };
+
     public Stage getStage() {
         return stage;
     }
