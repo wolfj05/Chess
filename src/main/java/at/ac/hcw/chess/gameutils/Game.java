@@ -12,6 +12,7 @@ public class Game {
     List<String> moveHistory = new ArrayList<>();
     private final List<Piece> capturedWhite = new ArrayList<>();
     private final List<Piece> capturedBlack = new ArrayList<>();
+    private Clock clock;
 
     public Game() {
         this.players[0] = new Player("White");
@@ -41,6 +42,14 @@ public class Game {
 
     public List<Piece> getCapturedBlack() { return capturedBlack; }
 
+    public Clock getClock() {
+        return clock;
+    }
+
+    public void setClock(Clock clock) {
+        this.clock = clock;
+    }
+
     public void switchTurn(){
         if (currentTurn == players[0]){
             currentTurn = players[1];
@@ -52,7 +61,14 @@ public class Game {
     public void startGame() {
         this.board = new Board(players, false, this);
 
-        currentTurn = players[0];
+        this.moveHistory.clear();
+
+        this.capturedWhite.clear();
+        this.capturedBlack.clear();
+
+        this.currentTurn = players[0];
+
+        this.clock.reset();
     }
 
     public void restartGame() {

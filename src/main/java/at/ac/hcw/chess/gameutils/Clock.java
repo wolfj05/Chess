@@ -7,12 +7,16 @@ public class Clock {
     private long whiteTime;
     private long blackTime;
 
+    private final long initialTimeMillis;
+
     private long lastUpdate = 0;
     private boolean runningWhite = true;
 
     private AnimationTimer timer;
 
     public Clock(long initialTimeMillis) {
+        this.initialTimeMillis = initialTimeMillis;
+
         whiteTime = initialTimeMillis;
         blackTime = initialTimeMillis;
 
@@ -55,6 +59,21 @@ public class Clock {
 
     public void switchTurn() {
         runningWhite = !runningWhite;
+    }
+
+    public void reset() {
+        // 1) Timer stoppen
+        timer.stop();
+
+        // 2) Zeiten auf den Originalwert zurücksetzen
+        whiteTime = initialTimeMillis;
+        blackTime = initialTimeMillis;
+
+        // 3) Weiße Seite beginnt
+        runningWhite = true;
+
+        // 4) lastUpdate zurücksetzen, damit keine langen Sprünge passieren
+        lastUpdate = 0;
     }
 
     public long getWhiteTime() {

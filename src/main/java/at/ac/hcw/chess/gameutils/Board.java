@@ -89,33 +89,17 @@ public class Board {
 
         Square from = getSquare(x1, y1);
         Square to = getSquare(x2, y2);
-
-        if (from == null) {
-            System.err.println("makeMove: from-square is null: " + x1 + "," + y1);
-            return;
-        }
-        if (to == null) {
-            System.err.println("makeMove: to-square is null: " + x2 + "," + y2);
-            return;
-        }
-
         Piece moving = from.getPiece();
-        if (moving == null) {
-            System.err.println("makeMove: no piece on from-square " + x1 + "," + y1);
-            return;
-        }
+        if (moving == null) return;
 
-        // --- 1) ECHTES capture prüfen (vor dem Überschreiben!) ---
         Piece captured = to.getPiece();
         if (!isSimulation && captured != null && captured.getPlayer() != moving.getPlayer()) {
-            // füge eine Kopie des geschlagenen Stücks zur captured-Liste hinzu
             game.addCapturedPiece(cloneForCapturedList(captured));
         }
 
-        // --- 2) En Passant speziell behandeln ---
         if (move.isEnPassant()) {
-            int dir = moving.getPlayer().getColor().equals("White") ? -1 : 1; // adjust if your coords differ
-            Square pawnSquare = getSquare(x2, y2 + dir); // pawn to remove (behind the target)
+            int dir = moving.getPlayer().getColor().equals("White") ? -1 : 1;
+            Square pawnSquare = getSquare(x2, y2 + dir);
             if (pawnSquare != null) {
                 Piece ep = pawnSquare.getPiece();
                 if (!isSimulation && ep instanceof Pawn && ep.getPlayer() != moving.getPlayer()) {
@@ -125,18 +109,15 @@ public class Board {
             }
         }
 
-        // --- 3) Nun den Zug ausführen (überschreibt 'to') ---
         from.setPiece(null);
         to.setPiece(moving);
         moving.setSquare(to);
 
-        // --- 4) Promotion ---
         if (move.isPromotion() && move.getPromotionTarget() != null) {
             try {
                 Piece promoted = move.getPromotionTarget()
                         .getDeclaredConstructor(Player.class)
                         .newInstance(moving.getPlayer());
-                // setze Square auf promoted
                 to.setPiece(promoted);
                 promoted.setSquare(to);
             } catch (Exception e) {
@@ -145,7 +126,6 @@ public class Board {
             }
         }
 
-        // --- 5) Castle: Rook bewegen (nachdem King bewegt wurde) ---
         if (move.isCastle()) {
             if (x2 == 6) { // short
                 Square rookFrom = getSquare(7, y1);
@@ -168,16 +148,14 @@ public class Board {
             }
         }
 
-        // --- 6) Double pawn push flag setzen ---
         if (moving instanceof Pawn && Math.abs(y2 - y1) == 2) {
             move.setDoublePawnPush(true);
         }
 
-        // --- 7) lastMove setzen ---
-        this.lastMove = move;
-
-        // --- 8) moved flag ---
-        moving.setHasMoved(true);
+        if(!this.isSimulation){
+            this.lastMove = move;
+            moving.setHasMoved(true);
+        }
     }
 
     private Piece cloneForCapturedList(Piece p) {

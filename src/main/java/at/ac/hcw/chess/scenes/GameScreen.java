@@ -17,10 +17,13 @@ import javafx.scene.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
+import javafx.scene.media.AudioClip;
 
 public class GameScreen {
 
@@ -41,7 +44,6 @@ public class GameScreen {
     private List<StackPane> blueHighlights = new ArrayList<>();
     private StackPane redKingSquare = null;
 
-    private Clock clock;
     private Label whiteClockLabel;
     private Label blackClockLabel;
 
@@ -51,6 +53,10 @@ public class GameScreen {
     private HBox blackCapturedBox;
     private Label whiteMaterialLabel;
     private Label blackMaterialLabel;
+
+    private AudioClip moveSound;
+    private AudioClip captureSound;
+    private AudioClip checkSound;
 
     public GameScreen(SceneManager sceneManager) {
         this.game = sceneManager.getGame();
@@ -66,6 +72,10 @@ public class GameScreen {
         boardView.setPreserveRatio(true);
         boardView.setFitHeight(screenHeight*.9); // schöne Größe
         boardView.setSmooth(true);
+
+        moveSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/move.wav")).toString());
+        captureSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/capture.wav")).toString());
+        checkSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/check.mp3")).toString());
 
         // --- GameView StackPane ---
         gameView = new StackPane();
@@ -159,8 +169,8 @@ public class GameScreen {
 
         sidebar.getChildren().addAll(restartButton, settingsButton, resignButton);
 
-        clock = new Clock(10 * 60 * 1000); // 10 Minuten
-        clock.start();
+        game.setClock(new Clock(10 * 60 * 1000)); // 10 Minuten
+        game.getClock().start();
 
         whiteClockLabel = new Label("10:00");
         whiteClockLabel.setStyle("-fx-font-size: 40px; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -279,6 +289,13 @@ public class GameScreen {
                     showPromotionPopup(selectedPiece, m);
                 } else {
                     game.getBoard().makeMove(m);
+
+                    if (m.getCapturedPiece() != null) {
+                        captureSound.play();
+                    } else {
+                        moveSound.play();
+                    }
+
                     String notation = getMoveNotation(m);
                     game.addMoveToHistory(notation);
                     updateMoveList();
@@ -287,18 +304,21 @@ public class GameScreen {
                     clearBlueHighlights();
                     selectedPiece = null;
                     game.switchTurn();
-                    clock.switchTurn();
+                    game.getClock().switchTurn();
                     highlightKingInCheck(game.getCurrentTurn());
                     isValidMove = true;
-                }
 
-                if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
-                    String winner = (game.getCurrentTurn() == game.getPlayers()[0])
-                            ? "Black wins!"
-                            : "White wins!";
-                    showGameOverOverlay("Checkmate!\n" + winner);
-                } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
-                    showGameOverOverlay("Stalemate!\nDraw");
+                    if (game.getBoard().isInCheck(game.getCurrentTurn())) {
+                        checkSound.play();
+                    }
+                    if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
+                        String winner = (game.getCurrentTurn() == game.getPlayers()[0])
+                                ? "Black wins!"
+                                : "White wins!";
+                        showGameOverOverlay("Checkmate!\n" + winner);
+                    } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
+                        showGameOverOverlay("Stalemate!\nDraw");
+                    }
                 }
                 break;
             }
@@ -312,7 +332,10 @@ public class GameScreen {
     }
 
     private void selectPiece(Piece piece) {
-        selectedPiece = piece;
+        Square sq = game.getBoard().getSquare(piece.getSquare().getRow(), piece.getSquare().getCol());
+        if (sq == null || sq.getPiece() == null) return;
+
+        selectedPiece = sq.getPiece();
 
         // Alle möglichen Moves berechnen
         List<Move> moves = piece.calcValidMoves(
@@ -400,7 +423,7 @@ public class GameScreen {
     }
 
     private void showGameOverOverlay(String message) {
-        clock.stop();
+        game.getClock().stop();
         if (gameOverOverlay != null) return;
 
         gameOverOverlay = new StackPane();
@@ -465,15 +488,15 @@ public class GameScreen {
         AnimationTimer uiTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                whiteClockLabel.setText(clock.format(clock.getWhiteTime()));
-                blackClockLabel.setText(clock.format(clock.getBlackTime()));
+                whiteClockLabel.setText(game.getClock().format(game.getClock().getWhiteTime()));
+                blackClockLabel.setText(game.getClock().format(game.getClock().getBlackTime()));
 
-                if (clock.getWhiteTime() <= 0) {
+                if (game.getClock().getWhiteTime() <= 0) {
                     showGameOverOverlay("Black wins (White ran out of time)");
                     stop();
                 }
 
-                if (clock.getBlackTime() <= 0) {
+                if (game.getClock().getBlackTime() <= 0) {
                     showGameOverOverlay("White wins (Black ran out of time)");
                     stop();
                 }
@@ -548,7 +571,7 @@ public class GameScreen {
         selectedPiece = null;
         clearBlueHighlights();
         game.switchTurn();
-        clock.switchTurn();
+        game.getClock().switchTurn();
         highlightKingInCheck(game.getCurrentTurn());
     }
 
