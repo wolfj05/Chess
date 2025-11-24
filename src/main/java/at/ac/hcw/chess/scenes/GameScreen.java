@@ -1,7 +1,7 @@
 package at.ac.hcw.chess.scenes;
 
 import at.ac.hcw.chess.gameutils.*;
-import at.ac.hcw.chess.pieces.Piece;
+import at.ac.hcw.chess.pieces.*;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -135,7 +135,18 @@ public class GameScreen {
                 -fx-padding: 10 20 10 20;
                 """);
 
-        sidebar.getChildren().addAll(restartButton, settingsButton);
+        Button resignButton = new Button("Resign");
+        resignButton.setStyle("""
+    -fx-background-color: #5b4636;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+""");
+
+        resignButton.setOnAction(e -> onResign());
+
+        sidebar.getChildren().addAll(restartButton, settingsButton, resignButton);
 
         clock = new Clock(10 * 60 * 1000); // 10 Minuten
         clock.start();
@@ -211,14 +222,18 @@ public class GameScreen {
         boolean isValidMove = false;
         for (Move m : legalMovesForSelected) {
             if (m.getToX() == x && m.getToY() == y) {
-                game.getBoard().makeMove(m);
-                updatePieces();
-                clearBlueHighlights();
-                selectedPiece = null;
-                game.switchTurn();
-                clock.switchTurn();
-                highlightKingInCheck(game.getCurrentTurn());
-                isValidMove = true;
+                if(m.isPromotion()){
+                    showPromotionPopup(selectedPiece, m);
+                } else {
+                    game.getBoard().makeMove(m);
+                    updatePieces();
+                    clearBlueHighlights();
+                    selectedPiece = null;
+                    game.switchTurn();
+                    clock.switchTurn();
+                    highlightKingInCheck(game.getCurrentTurn());
+                    isValidMove = true;
+                }
 
                 if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
                     String winner = (game.getCurrentTurn() == game.getPlayers()[0])
@@ -408,5 +423,84 @@ public class GameScreen {
             }
         };
         uiTimer.start();
+    }
+
+    private void showPromotionPopup(Piece pawn, Move move) {
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+
+        VBox box = new VBox(20);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle("""
+        -fx-background-color: #f0e6d2;
+        -fx-padding: 20;
+        -fx-background-radius: 20;
+        -fx-border-radius: 20;
+        -fx-border-color: #5b4636;
+        -fx-border-width: 4;
+    """);
+
+        Label text = new Label("Choose promotion piece:");
+        text.setStyle("-fx-font-size: 28px; -fx-text-fill: black; -fx-font-weight: bold;");
+
+        HBox buttons = new HBox(20);
+        buttons.setAlignment(Pos.CENTER);
+
+        Button queen = new Button("Queen");
+        Button rook = new Button("Rook");
+        Button bishop = new Button("Bishop");
+        Button knight = new Button("Knight");
+
+        queen.setOnAction(e -> finishPromotion(move, "queen"));
+        rook.setOnAction(e -> finishPromotion(move, "rook"));
+        bishop.setOnAction(e -> finishPromotion(move, "bishop"));
+        knight.setOnAction(e -> finishPromotion(move, "knight"));
+
+        buttons.getChildren().addAll(queen, rook, bishop, knight);
+        box.getChildren().addAll(text, buttons);
+
+        overlay.getChildren().add(box);
+
+        gameView.getChildren().add(overlay);
+    }
+
+    private void finishPromotion(Move move, String type) {
+        Board board = game.getBoard();
+
+        // Temporär Zug ausführen
+        board.makeMove(move);
+
+        // Figur ersetzen
+        Player player = move.getMovedPiece().getPlayer();
+        int x = move.getToX();
+        int y = move.getToY();
+
+        switch (type) {
+            case "queen" -> board.getSquare(x, y).setPiece(new Queen(player, player.getColor().equals("White") ? "/white_queen.png" : "/black_queen.png"));
+            case "rook" -> board.getSquare(x, y).setPiece(new Rook(player, player.getColor().equals("White") ? "/white_rook.png" : "/black_rook.png"));
+            case "bishop" -> board.getSquare(x, y).setPiece(new Bishop(player, player.getColor().equals("White") ? "/white_bishop.png" : "/black_bishop.png"));
+            case "knight" -> board.getSquare(x, y).setPiece(new Knight(player, player.getColor().equals("White") ? "/white_knight.png" : "/black_knight.png"));
+        }
+
+        updatePieces();
+
+        // Overlay entfernen
+        gameView.getChildren().remove(gameView.getChildren().size() - 1);
+
+        // Restliches Spiel fortsetzen
+        selectedPiece = null;
+        clearBlueHighlights();
+        game.switchTurn();
+        clock.switchTurn();
+        highlightKingInCheck(game.getCurrentTurn());
+    }
+
+    private void onResign() {
+        Player loser = game.getCurrentTurn();
+        Player winner = (game.getPlayers()[0] == loser
+                ? game.getPlayers()[1]
+                : game.getPlayers()[0]);
+
+        showGameOverOverlay(winner.getColor() + " wins by resignation!");
     }
 }
