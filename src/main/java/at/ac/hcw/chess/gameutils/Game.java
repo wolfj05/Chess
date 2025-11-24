@@ -52,4 +52,8 @@ public class Game {
     public void restartGame() {
         startGame();
     }
+
+    public void addMoveToHistory(String notation) {
+        moveHistory.add(notation);
+    }
 }

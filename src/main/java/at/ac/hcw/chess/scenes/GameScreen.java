@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -30,6 +31,9 @@ public class GameScreen {
     private GridPane squareGrid;
     private StackPane gameView;
     private StackPane gameOverOverlay = null;
+
+    private VBox moveListPane;
+    private VBox moveListBox;
 
     private double squareSize;
     private Piece selectedPiece = null;
@@ -162,7 +166,23 @@ public class GameScreen {
         StackPane.setAlignment(backButton, Pos.TOP_RIGHT);
         StackPane.setMargin(backButton, new Insets(10, 10, 0, 0));
 
-        HBox layout = new HBox(sidebar, gameView, backButton);
+        moveListBox = new VBox(5);
+        moveListBox.setPadding(new Insets(20));
+        moveListBox.setAlignment(Pos.TOP_LEFT);
+
+        ScrollPane moveScroll = new ScrollPane(moveListBox);
+        moveScroll.setFitToWidth(true);
+        moveScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        moveListPane = new VBox();
+        moveListPane.setPrefWidth(250);
+        moveListPane.setStyle("""
+    -fx-background-color: rgba(255,255,255,0.55);
+    -fx-padding: 20;
+""");
+        moveListPane.getChildren().add(moveScroll);
+
+        HBox layout = new HBox(sidebar, gameView, moveListPane, backButton);
         layout.setStyle("""
         -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
         """);
@@ -226,6 +246,9 @@ public class GameScreen {
                     showPromotionPopup(selectedPiece, m);
                 } else {
                     game.getBoard().makeMove(m);
+                    String notation = getMoveNotation(m);
+                    game.addMoveToHistory(notation);
+                    updateMoveList();
                     updatePieces();
                     clearBlueHighlights();
                     selectedPiece = null;
@@ -502,5 +525,41 @@ public class GameScreen {
                 : game.getPlayers()[0]);
 
         showGameOverOverlay(winner.getColor() + " wins by resignation!");
+    }
+
+    private String getMoveNotation(Move move) {
+        char file = (char) ('a' + move.getToX());
+        int rank = move.getToY() + 1;
+        String prefix = "";
+
+        // Setze Figur-Code (Pawn = leer)
+        Piece piece = move.getMovedPiece();
+        String type = piece.getClass().getSimpleName();
+        switch (type) {
+            case "Knight" -> prefix = "N";
+            case "Bishop" -> prefix = "B";
+            case "Rook" -> prefix = "R";
+            case "Queen" -> prefix = "Q";
+            case "King" -> prefix = "K";
+        }
+
+        // Captures
+        if (move.getCapturedPiece() != null)
+            prefix += "x";
+
+        return prefix + file + rank;
+    }
+
+    private void updateMoveList() {
+        moveListBox.getChildren().clear();
+
+        List<String> moves = game.getMoveHistory();
+
+        for (int i = 0; i < moves.size(); i++) {
+            String text = moves.get(i);
+            Label label = new Label((i + 1) + ". " + text);
+            label.setStyle("-fx-font-size: 18px; -fx-text-fill: black;");
+            moveListBox.getChildren().add(label);
+        }
     }
 }
