@@ -2,10 +2,12 @@ package at.ac.hcw.chess.scenes;
 
 import at.ac.hcw.chess.gameutils.*;
 import at.ac.hcw.chess.pieces.Piece;
+import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -34,6 +36,10 @@ public class GameScreen {
     private List<Move> legalMovesForSelected = new ArrayList<>();
     private List<StackPane> blueHighlights = new ArrayList<>();
     private StackPane redKingSquare = null;
+
+    private Clock clock;
+    private Label whiteClockLabel;
+    private Label blackClockLabel;
 
     public GameScreen(SceneManager sceneManager) {
         this.game = sceneManager.getGame();
@@ -131,6 +137,17 @@ public class GameScreen {
 
         sidebar.getChildren().addAll(restartButton, settingsButton);
 
+        clock = new Clock(10 * 60 * 1000); // 10 Minuten
+        clock.start();
+
+        whiteClockLabel = new Label("10:00");
+        whiteClockLabel.setStyle("-fx-font-size: 40px; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        blackClockLabel = new Label("10:00");
+        blackClockLabel.setStyle("-fx-font-size: 40px; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        sidebar.getChildren().addAll(whiteClockLabel, blackClockLabel);
+
         StackPane.setAlignment(backButton, Pos.TOP_RIGHT);
         StackPane.setMargin(backButton, new Insets(10, 10, 0, 0));
 
@@ -145,6 +162,8 @@ public class GameScreen {
         scene = new Scene(root, 1920, 1080);
 
         backButton.setOnAction(e -> sceneManager.showMainMenu());
+
+        startClockUIUpdate();
     }
 
     private void updatePieces() {
@@ -197,6 +216,7 @@ public class GameScreen {
                 clearBlueHighlights();
                 selectedPiece = null;
                 game.switchTurn();
+                clock.switchTurn();
                 highlightKingInCheck(game.getCurrentTurn());
                 isValidMove = true;
 
@@ -308,6 +328,7 @@ public class GameScreen {
     }
 
     private void showGameOverOverlay(String message) {
+        clock.stop();
         if (gameOverOverlay != null) return;
 
         gameOverOverlay = new StackPane();
@@ -366,5 +387,26 @@ public class GameScreen {
             gameView.getChildren().remove(gameOverOverlay);
             gameOverOverlay = null;
         }
+    }
+
+    private void startClockUIUpdate() {
+        AnimationTimer uiTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                whiteClockLabel.setText(clock.format(clock.getWhiteTime()));
+                blackClockLabel.setText(clock.format(clock.getBlackTime()));
+
+                if (clock.getWhiteTime() <= 0) {
+                    showGameOverOverlay("Black wins (White ran out of time)");
+                    stop();
+                }
+
+                if (clock.getBlackTime() <= 0) {
+                    showGameOverOverlay("White wins (Black ran out of time)");
+                    stop();
+                }
+            }
+        };
+        uiTimer.start();
     }
 }
