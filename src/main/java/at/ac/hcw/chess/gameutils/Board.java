@@ -8,8 +8,12 @@ public class Board {
     Square[][] board = new Square[8][8];
     Player[] players;
     private Move lastMove;
+    Game game;
+    boolean isSimulation;
 
-    public Board(Player[] players, boolean empty){
+    public Board(Player[] players, boolean empty, Game game){
+        this.isSimulation = empty;
+        this.game = game;
         this.players = players;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -73,70 +77,119 @@ public class Board {
         return lastMove;
     }
 
-    public void makeMove(Move move) {
+    public boolean isSimulation() {
+        return isSimulation;
+    }
 
+    public void makeMove(Move move) {
         int x1 = move.getFromX();
         int y1 = move.getFromY();
         int x2 = move.getToX();
         int y2 = move.getToY();
 
-        Piece piece = move.getMovedPiece();
-
         Square from = getSquare(x1, y1);
         Square to = getSquare(x2, y2);
 
-        if (move.getCapturedPiece() != null) {
-            to.setPiece(null);
+        if (from == null) {
+            System.err.println("makeMove: from-square is null: " + x1 + "," + y1);
+            return;
+        }
+        if (to == null) {
+            System.err.println("makeMove: to-square is null: " + x2 + "," + y2);
+            return;
         }
 
+        Piece moving = from.getPiece();
+        if (moving == null) {
+            System.err.println("makeMove: no piece on from-square " + x1 + "," + y1);
+            return;
+        }
+
+        // --- 1) ECHTES capture prüfen (vor dem Überschreiben!) ---
+        Piece captured = to.getPiece();
+        if (!isSimulation && captured != null && captured.getPlayer() != moving.getPlayer()) {
+            // füge eine Kopie des geschlagenen Stücks zur captured-Liste hinzu
+            game.addCapturedPiece(cloneForCapturedList(captured));
+        }
+
+        // --- 2) En Passant speziell behandeln ---
         if (move.isEnPassant()) {
-            int dir = piece.getPlayer().getColor().equals("White") ? -1 : 1;
-
-            Square pawnSquare = getSquare(move.getToX(), move.getToY() + dir);
-            pawnSquare.setPiece(null);   // gegnerischen Bauern entfernen
+            int dir = moving.getPlayer().getColor().equals("White") ? -1 : 1; // adjust if your coords differ
+            Square pawnSquare = getSquare(x2, y2 + dir); // pawn to remove (behind the target)
+            if (pawnSquare != null) {
+                Piece ep = pawnSquare.getPiece();
+                if (!isSimulation && ep instanceof Pawn && ep.getPlayer() != moving.getPlayer()) {
+                    game.addCapturedPiece(cloneForCapturedList(ep));
+                    pawnSquare.setPiece(null);
+                }
+            }
         }
 
+        // --- 3) Nun den Zug ausführen (überschreibt 'to') ---
         from.setPiece(null);
-        to.setPiece(piece);
+        to.setPiece(moving);
+        moving.setSquare(to);
 
+        // --- 4) Promotion ---
         if (move.isPromotion() && move.getPromotionTarget() != null) {
             try {
-                Piece promotedPiece = move.getPromotionTarget()
+                Piece promoted = move.getPromotionTarget()
                         .getDeclaredConstructor(Player.class)
-                        .newInstance(piece.getPlayer());
-                to.setPiece(promotedPiece);
+                        .newInstance(moving.getPlayer());
+                // setze Square auf promoted
+                to.setPiece(promoted);
+                promoted.setSquare(to);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException("Promotion failed");
             }
         }
 
+        // --- 5) Castle: Rook bewegen (nachdem King bewegt wurde) ---
         if (move.isCastle()) {
-            if (move.getToX() == 6) {  // short castle (king side)
+            if (x2 == 6) { // short
                 Square rookFrom = getSquare(7, y1);
                 Square rookTo = getSquare(5, y1);
-
-                Piece rook = rookFrom.getPiece();
-                rookFrom.setPiece(null);
-                rookTo.setPiece(rook);
-            } else if (move.getToX() == 2) {   // long castle (queen side)
+                if (rookFrom != null && rookFrom.getPiece() != null) {
+                    Piece rook = rookFrom.getPiece();
+                    rookFrom.setPiece(null);
+                    rookTo.setPiece(rook);
+                    rook.setSquare(rookTo);
+                }
+            } else if (x2 == 2) { // long
                 Square rookFrom = getSquare(0, y1);
                 Square rookTo = getSquare(3, y1);
-
-                Piece rook = rookFrom.getPiece();
-                rookFrom.setPiece(null);
-                rookTo.setPiece(rook);
+                if (rookFrom != null && rookFrom.getPiece() != null) {
+                    Piece rook = rookFrom.getPiece();
+                    rookFrom.setPiece(null);
+                    rookTo.setPiece(rook);
+                    rook.setSquare(rookTo);
+                }
             }
         }
 
-        if (piece instanceof Pawn && Math.abs(y2 - y1) == 2) {
+        // --- 6) Double pawn push flag setzen ---
+        if (moving instanceof Pawn && Math.abs(y2 - y1) == 2) {
             move.setDoublePawnPush(true);
         }
 
-        // 6) Double pawn push (für späteres En Passant Tracking)
+        // --- 7) lastMove setzen ---
         this.lastMove = move;
 
-        piece.setHasMoved(true);
+        // --- 8) moved flag ---
+        moving.setHasMoved(true);
+    }
+
+    private Piece cloneForCapturedList(Piece p) {
+        if (p == null) return null;
+        // kopiere nur Typ, player, src
+        if (p instanceof Pawn) return new Pawn(p.getPlayer(), p.getSrc());
+        if (p instanceof Rook) return new Rook(p.getPlayer(), p.getSrc());
+        if (p instanceof Knight) return new Knight(p.getPlayer(), p.getSrc());
+        if (p instanceof Bishop) return new Bishop(p.getPlayer(), p.getSrc());
+        if (p instanceof Queen) return new Queen(p.getPlayer(), p.getSrc());
+        if (p instanceof King) return new King(p.getPlayer(), p.getSrc());
+        return null;
     }
 
     public boolean isValid(int row, int col) {
@@ -199,7 +252,7 @@ public class Board {
     }
 
     public Board deepCopy() {
-        Board copy = new Board(players, true);
+        Board copy = new Board(players, true, this.game);
         copy.lastMove = this.lastMove;
 
         for (int x = 0; x < 8; x++) {

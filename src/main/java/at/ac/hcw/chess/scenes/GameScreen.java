@@ -45,6 +45,13 @@ public class GameScreen {
     private Label whiteClockLabel;
     private Label blackClockLabel;
 
+    private VBox whitePanel;
+    private VBox blackPanel;
+    private HBox whiteCapturedBox;
+    private HBox blackCapturedBox;
+    private Label whiteMaterialLabel;
+    private Label blackMaterialLabel;
+
     public GameScreen(SceneManager sceneManager) {
         this.game = sceneManager.getGame();
         this.sceneManager = sceneManager;
@@ -182,7 +189,33 @@ public class GameScreen {
 """);
         moveListPane.getChildren().add(moveScroll);
 
-        HBox layout = new HBox(sidebar, gameView, moveListPane, backButton);
+        whiteCapturedBox = new HBox(5);
+        blackCapturedBox = new HBox(5);
+
+        whiteMaterialLabel = new Label("+0");
+        blackMaterialLabel = new Label("+0");
+
+        whitePanel = new VBox(10,
+                new Label("White"),
+                whiteCapturedBox,
+                whiteMaterialLabel
+        );
+        whitePanel.setPadding(new Insets(20));
+        whitePanel.setStyle("-fx-background-color: rgba(255,255,255,0.55); -fx-font-size: 20;");
+
+        blackPanel = new VBox(10,
+                new Label("Black"),
+                blackCapturedBox,
+                blackMaterialLabel
+        );
+        blackPanel.setPadding(new Insets(20));
+        blackPanel.setStyle("-fx-background-color: rgba(255,255,255,0.55); -fx-font-size: 20;");
+
+        VBox playerPanel = new VBox(100, whitePanel, blackPanel);
+        playerPanel.setPrefWidth(250);
+        playerPanel.setAlignment(Pos.TOP_CENTER);
+
+        HBox layout = new HBox(sidebar, playerPanel, gameView, moveListPane, backButton);
         layout.setStyle("""
         -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
         """);
@@ -250,6 +283,7 @@ public class GameScreen {
                     game.addMoveToHistory(notation);
                     updateMoveList();
                     updatePieces();
+                    updatePlayerPanels();
                     clearBlueHighlights();
                     selectedPiece = null;
                     game.switchTurn();
@@ -561,5 +595,40 @@ public class GameScreen {
             label.setStyle("-fx-font-size: 18px; -fx-text-fill: black;");
             moveListBox.getChildren().add(label);
         }
+    }
+
+    private void updatePlayerPanels() {
+        // Reset
+        whiteCapturedBox.getChildren().clear();
+        blackCapturedBox.getChildren().clear();
+
+        int whiteScore = 0;
+        int blackScore = 0;
+
+        // White zeigt geschlagene schwarze Figuren
+        for (Piece p : game.getCapturedBlack()) {
+            ImageView iv = new ImageView(new Image(p.getSrc()));
+            iv.setFitWidth(30);
+            iv.setFitHeight(30);
+            whiteCapturedBox.getChildren().add(iv);
+
+            whiteScore += p.getValue();
+        }
+
+        // Black zeigt geschlagene weiße Figuren
+        for (Piece p : game.getCapturedWhite()) {
+            ImageView iv = new ImageView(new Image(p.getSrc()));
+            iv.setFitWidth(30);
+            iv.setFitHeight(30);
+            blackCapturedBox.getChildren().add(iv);
+
+            blackScore += p.getValue();
+        }
+
+        int diffWhite = whiteScore - blackScore;
+        int diffBlack = -diffWhite;
+
+        whiteMaterialLabel.setText(diffWhite >= 0 ? "+" + diffWhite : String.valueOf(diffWhite));
+        blackMaterialLabel.setText(diffBlack >= 0 ? "+" + diffBlack : String.valueOf(diffBlack));
     }
 }

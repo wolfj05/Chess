@@ -62,4 +62,13 @@ public abstract class Piece {
 
     public abstract List<Move> calcValidMoves(Board board, int x, int y); //CALC ist btw Slang für Calculate
 
+    public int getValue() {
+        return switch (this.getClass().getSimpleName()) {
+            case "Pawn" -> 1;
+            case "Knight", "Bishop" -> 3;
+            case "Rook" -> 5;
+            case "Queen" -> 9;
+            default -> 0; // König
+        };
+    }
 }

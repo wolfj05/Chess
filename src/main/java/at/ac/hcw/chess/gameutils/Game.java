@@ -10,13 +10,15 @@ public class Game {
     Player[] players = new Player[2];
     Player currentTurn;
     List<String> moveHistory = new ArrayList<>();
+    private final List<Piece> capturedWhite = new ArrayList<>();
+    private final List<Piece> capturedBlack = new ArrayList<>();
 
     public Game() {
         this.players[0] = new Player("White");
         this.players[1] = new Player("Black");
         currentTurn = this.players[0];
 
-        this.board = new Board(this.players, false);
+        this.board = new Board(this.players, false, this);
     }
 
     public Player[] getPlayers() {
@@ -35,6 +37,10 @@ public class Game {
         return board;
     }
 
+    public List<Piece> getCapturedWhite() { return capturedWhite; }
+
+    public List<Piece> getCapturedBlack() { return capturedBlack; }
+
     public void switchTurn(){
         if (currentTurn == players[0]){
             currentTurn = players[1];
@@ -44,7 +50,7 @@ public class Game {
     }
 
     public void startGame() {
-        this.board = new Board(players, false);
+        this.board = new Board(players, false, this);
 
         currentTurn = players[0];
     }
@@ -55,5 +61,20 @@ public class Game {
 
     public void addMoveToHistory(String notation) {
         moveHistory.add(notation);
+    }
+
+    public void addCapturedPiece(Piece p) {
+        // tiefkopierte Boards dürfen NICHT capturen
+        if (this.board.isSimulation) return;
+
+        if (p == null) return;
+
+        if (p.getPlayer().getColor().equals("White")) {
+            if (!capturedWhite.contains(p))
+                capturedWhite.add(p);
+        } else {
+            if (!capturedBlack.contains(p))
+                capturedBlack.add(p);
+        }
     }
 }
