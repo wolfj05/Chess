@@ -31,7 +31,7 @@ public class GameScreen {
     private double squareSize;
 
     // PANELS
-    private VBox leftPanel;
+    private BorderPane leftPanel;
     private VBox moveListPane;
     private VBox moveListBox;
 
@@ -125,7 +125,7 @@ public class GameScreen {
         });
 
         // SIDE PANEL LEFT (25% WIDTH)
-        leftPanel = new VBox(40);
+        leftPanel = new BorderPane();
         leftPanel.setPadding(new Insets(20));
         leftPanel.prefWidthProperty().bind(sceneManager.getStage().widthProperty().multiply(0.22));
         leftPanel.setStyle("-fx-background-color: transparent;");
@@ -197,7 +197,7 @@ public class GameScreen {
         Button resign = new Button("Resign");
         resign.setOnAction(e -> onResign());
 
-        Button back = new Button("Back");
+        Button back = new Button("Back to Menu");
         back.setOnAction(e -> sceneManager.showMainMenu());
 
         restart.setStyle(btn());
@@ -229,13 +229,16 @@ public class GameScreen {
         whiteMaterialLabel = new Label();
         whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
 
-        VBox whiteSection = new VBox(8, whiteHeader, whiteCapturedRow, whiteMaterialLabel);
+        VBox whiteSection = new VBox(8, whiteCapturedRow, whiteMaterialLabel, whiteHeader);
 
 
         // BUILD LEFT PANEL
         leftPanel.getChildren().clear();
-        leftPanel.getChildren().addAll(blackSection, menuBox, whiteSection);
-        leftPanel.setAlignment(Pos.CENTER);
+        //leftPanel.getChildren().addAll(blackSection, menuBox, whiteSection);
+        leftPanel.setTop(blackSection);
+        leftPanel.setCenter(menuBox);
+        leftPanel.setBottom(whiteSection);
+
     }
 
     private String btn() {
@@ -361,7 +364,14 @@ public class GameScreen {
         for (Move mv : List.copyOf(legalMovesForSelected)) {
             StackPane node = getSquareNode(mv.getToX(), mv.getToY());
             if (node != null) {
-                node.setBackground(new Background(new BackgroundFill(Color.rgb(0, 0, 255, 0.35), CornerRadii.EMPTY, Insets.EMPTY)));
+                javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle();
+
+                dot.setRadius(squareSize * 0.15);     // Größe des Punktes
+                dot.setFill(Color.rgb(80, 80, 80, 0.55)); // halbtransparentes Grau
+
+                node.getChildren().add(dot);
+                StackPane.setAlignment(dot, Pos.CENTER);
+
                 blueHighlights.add(node);
             }
         }
@@ -388,7 +398,7 @@ public class GameScreen {
 
     private void clearBlueHighlights() {
         for (StackPane s : List.copyOf(blueHighlights)) {
-            s.setBackground(null);
+            s.getChildren().removeIf(n -> n instanceof javafx.scene.shape.Circle);
         }
         blueHighlights.clear();
     }
@@ -683,7 +693,7 @@ public class GameScreen {
         int blackScore = 0;
 
         // White captured: pieces that Black has taken (display on whiteCapturedRow)
-        List<Piece> capturedByWhite = new ArrayList<>(List.copyOf(game.getCapturedWhite()));
+        List<Piece> capturedByWhite = new ArrayList<>(List.copyOf(game.getCapturedBlack()));
         capturedByWhite.sort(Comparator.comparingInt(Piece::getValue).reversed());
 
         whiteCapturedRow.getChildren().clear();
@@ -696,7 +706,7 @@ public class GameScreen {
         }
 
         // Black captured: pieces that White has taken (display on blackCapturedRow)
-        List<Piece> capturedByBlack = new ArrayList<>(List.copyOf(game.getCapturedBlack()));
+        List<Piece> capturedByBlack = new ArrayList<>(List.copyOf(game.getCapturedWhite()));
         capturedByBlack.sort(Comparator.comparingInt(Piece::getValue).reversed());
 
         blackCapturedRow.getChildren().clear();
