@@ -110,6 +110,7 @@ public class Board {
         }
 
         from.setPiece(null);
+        System.out.println(from.getPiece());
         to.setPiece(moving);
         moving.setSquare(to);
 

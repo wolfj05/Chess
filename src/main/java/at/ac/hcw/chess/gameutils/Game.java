@@ -13,11 +13,14 @@ public class Game {
     private final List<Piece> capturedWhite = new ArrayList<>();
     private final List<Piece> capturedBlack = new ArrayList<>();
     private Clock clock;
+    private int startTime = 10 * 60 * 1000;
 
     public Game() {
         this.players[0] = new Player("White");
         this.players[1] = new Player("Black");
         currentTurn = this.players[0];
+
+        this.clock = new Clock(startTime);
 
         this.board = new Board(this.players, false, this);
     }
