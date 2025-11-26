@@ -182,7 +182,7 @@ public class GameScreen {
 
         // CAPTURED BLACK – OVERLAP 30%
         blackCapturedRow = new HBox();
-        blackCapturedRow.setSpacing(-squareSize * 0.30);
+        blackCapturedRow.setSpacing(-squareSize * 0.20);
 
         blackMaterialLabel = new Label();
         blackMaterialLabel.setStyle("-fx-font-size: 18px;");
@@ -224,7 +224,7 @@ public class GameScreen {
         whiteHeader.getChildren().addAll(whiteName, spacer2, whiteClockLabel);
 
         whiteCapturedRow = new HBox();
-        whiteCapturedRow.setSpacing(-squareSize * 0.30);
+        whiteCapturedRow.setSpacing(-squareSize * 0.20);
 
         whiteMaterialLabel = new Label();
         whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
@@ -278,11 +278,9 @@ public class GameScreen {
         }
 
         // after pieces placed, ensure captured rows spacing adapts if squareSize changed
-        /*double overlap = (squareSize > 0) ? -squareSize * 0.30 : -24;
+        double overlap = (squareSize > 0) ? -squareSize * 0.25 : -24;
         blackCapturedRow.setSpacing(overlap);
         whiteCapturedRow.setSpacing(overlap);
-
-         */
     }
 
     // ---------- INPUT HANDLING ----------
@@ -691,8 +689,8 @@ public class GameScreen {
         whiteCapturedRow.getChildren().clear();
         for (Piece p : capturedByWhite) {
             ImageView iv = new ImageView(new Image(p.getSrc()));
-            iv.setFitWidth(Math.max(20, squareSize * 0.75));
-            iv.setFitHeight(Math.max(20, squareSize * 0.75));
+            iv.setFitWidth(squareSize * 0.4);
+            iv.setFitHeight(squareSize * 0.4);
             whiteCapturedRow.getChildren().add(iv);
             whiteScore += p.getValue();
         }
@@ -704,8 +702,8 @@ public class GameScreen {
         blackCapturedRow.getChildren().clear();
         for (Piece p : capturedByBlack) {
             ImageView iv = new ImageView(new Image(p.getSrc()));
-            iv.setFitWidth(Math.max(20, squareSize * 0.75));
-            iv.setFitHeight(Math.max(20, squareSize * 0.75));
+            iv.setFitWidth(squareSize * 0.4);
+            iv.setFitHeight(squareSize * 0.4);
             blackCapturedRow.getChildren().add(iv);
             blackScore += p.getValue();
         }
