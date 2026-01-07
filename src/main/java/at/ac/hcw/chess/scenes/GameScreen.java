@@ -3,6 +3,7 @@ package at.ac.hcw.chess.scenes;
 import at.ac.hcw.chess.gameutils.*;
 import at.ac.hcw.chess.pieces.*;
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -94,7 +95,6 @@ public class GameScreen {
 
             double borderRatio = 0.048; // 5% außen ringsum
 
-            double totalSize = boardView.getFitHeight();
             double innerSize = h * (1 - 2 * borderRatio);
             squareSize = innerSize / 8.0;
 
@@ -120,8 +120,10 @@ public class GameScreen {
                 }
             }
 
-            updatePieces();
-            highlightKingCheck(game.getCurrentTurn());
+            Platform.runLater(() -> {
+                updatePieces();
+                highlightKingCheck(game.getCurrentTurn());
+            });
         });
 
         // SIDE PANEL LEFT (25% WIDTH)
@@ -330,7 +332,6 @@ public class GameScreen {
                         showGameOverOverlay("Stalemate!\nDraw");
                     }
                 }
-                System.out.println(square.getPiece());
                 break;
             }
         }
@@ -355,6 +356,7 @@ public class GameScreen {
             }
         }
 
+        System.out.println(legalMovesForSelected.toString());
         highlightLegalMoves();
         highlightKingCheck(game.getCurrentTurn());
     }
@@ -371,7 +373,7 @@ public class GameScreen {
 
                 node.getChildren().add(dot);
                 StackPane.setAlignment(dot, Pos.CENTER);
-
+                System.out.println("hi");
                 blueHighlights.add(node);
             }
         }
