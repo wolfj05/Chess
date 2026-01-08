@@ -2,7 +2,10 @@ package at.ac.hcw.chess.gameutils;
 
 import at.ac.hcw.chess.pieces.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Board {
     Square[][] board = new Square[8][8];
@@ -10,6 +13,8 @@ public class Board {
     private Move lastMove;
     Game game;
     boolean isSimulation;
+    private final Map<String, Integer> positionCount = new HashMap<>();
+    private int halfMoveClock = 0;
 
     public Board(Player[] players, boolean empty, Game game){
         this.isSimulation = empty;
@@ -155,6 +160,13 @@ public class Board {
         if(!this.isSimulation){
             this.lastMove = move;
             moving.setHasMoved(true);
+            String key = getPositionKey(this.game.getCurrentTurn());
+            positionCount.merge(key, 1, Integer::sum);
+            if (move.getCapturedPiece() != null || move.getMovedPiece() instanceof Pawn) {
+                halfMoveClock = 0;
+            } else {
+                halfMoveClock++;
+            }
         }
     }
 
@@ -285,5 +297,68 @@ public class Board {
             }
         }
         return true; // keine legalen Züge und nicht im Schach → Patt
+    }
+
+    public String getPositionKey(Player turn) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(turn.getColor()).append("|");
+
+        for (int y = 7; y >= 0; y--) {
+            for (int x = 0; x < 8; x++) {
+                Piece p = board[x][y].getPiece();
+                sb.append(p == null ? "." : p.getClass().getSimpleName().charAt(0));
+            }
+        }
+        return sb.toString();
+    }
+
+    public boolean isThreefoldRepetition() {
+        return positionCount.values().stream().anyMatch(v -> v >= 3);
+    }
+
+    public boolean isFiftyMoveRule() {
+        return halfMoveClock >= 100; // 100 Halbzüge
+    }
+
+    public boolean hasInsufficientMaterial() {
+        List<Piece> white = new ArrayList<>();
+        List<Piece> black = new ArrayList<>();
+
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece p = this.game.getBoard().getPiece(x, y);
+                if (p != null) {
+                    if (p instanceof King) continue;
+                    if (p.getPlayer().getColor().equals("White")) white.add(p);
+                    else black.add(p);
+                }
+            }
+        }
+
+        // King vs King
+        if (white.isEmpty() && black.isEmpty()) return true;
+
+        // King + minor vs King
+        if (white.size() == 1 && black.isEmpty())
+            return white.get(0) instanceof Bishop || white.get(0) instanceof Knight;
+
+        if (black.size() == 1 && white.isEmpty())
+            return black.get(0) instanceof Bishop || black.get(0) instanceof Knight;
+
+        // King + bishop vs King + bishop (same color squares)
+        if (white.size() == 1 && black.size() == 1
+                && white.get(0) instanceof Bishop
+                && black.get(0) instanceof Bishop) {
+
+            Square ws = white.get(0).getSquare();
+            Square bs = black.get(0).getSquare();
+
+            boolean wDark = (ws.getRow() + ws.getCol()) % 2 == 1;
+            boolean bDark = (bs.getRow() + bs.getCol()) % 2 == 1;
+
+            return wDark == bDark;
+        }
+
+        return false;
     }
 }

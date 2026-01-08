@@ -58,6 +58,8 @@ public class GameScreen {
     private AudioClip moveSound;
     private AudioClip captureSound;
     private AudioClip checkSound;
+    private AudioClip endSound;
+    private AudioClip pattSound;
 
     // OVERLAY
     private StackPane gameOverOverlay;
@@ -74,6 +76,8 @@ public class GameScreen {
         moveSound    = new AudioClip(Objects.requireNonNull(getClass().getResource("/move.wav")).toString());
         captureSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/capture.wav")).toString());
         checkSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/check.mp3")).toString());
+        endSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/end.mp3")).toString());
+        pattSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/patt.mp3")).toString());
 
         // BOARD IMAGE
         ImageView boardView = new ImageView(new Image("/board.png"));
@@ -231,7 +235,7 @@ public class GameScreen {
         whiteMaterialLabel = new Label();
         whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
 
-        VBox whiteSection = new VBox(8, whiteCapturedRow, whiteMaterialLabel, whiteHeader);
+        VBox whiteSection = new VBox(8, whiteMaterialLabel, whiteCapturedRow, whiteHeader);
 
 
         // BUILD LEFT PANEL
@@ -328,8 +332,13 @@ public class GameScreen {
                     if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
                         String winner = (game.getCurrentTurn() == game.getPlayers()[0]) ? "Black wins!" : "White wins!";
                         showGameOverOverlay("Checkmate!\n" + winner);
-                    } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
-                        showGameOverOverlay("Stalemate!\nDraw");
+                        endSound.play();
+                    } else if (game.getBoard().isStalemate(game.getCurrentTurn())
+                            || game.getBoard().hasInsufficientMaterial()
+                            || game.getBoard().isFiftyMoveRule()
+                            || game.getBoard().isThreefoldRepetition()) {
+                        showGameOverOverlay("Stalemate! Draw");
+                        pattSound.play();
                     }
                 }
                 break;
@@ -356,7 +365,6 @@ public class GameScreen {
             }
         }
 
-        System.out.println(legalMovesForSelected.toString());
         highlightLegalMoves();
         highlightKingCheck(game.getCurrentTurn());
     }
@@ -373,7 +381,6 @@ public class GameScreen {
 
                 node.getChildren().add(dot);
                 StackPane.setAlignment(dot, Pos.CENTER);
-                System.out.println("hi");
                 blueHighlights.add(node);
             }
         }
@@ -483,51 +490,6 @@ public class GameScreen {
             }
         };
         t.start();
-    }
-
-    // --------- (Fortsetzung von Teil 2) ----------
-    // ---------- PERFORM MOVE ----------
-    private void performMove(Move m) {
-        if (m == null) return;
-
-        // Führe Zug aus
-        game.getBoard().makeMove(m);
-
-        // Sounds
-        if (m.getCapturedPiece() != null) {
-            if (captureSound != null) captureSound.play();
-        } else {
-            if (moveSound != null) moveSound.play();
-        }
-
-        // Notation & history
-        String notation = getMoveNotation(m);
-        game.addMoveToHistory(notation);
-
-        // UI updates
-        updateMoveList();
-        updatePieces();
-        updatePlayerPanels();
-        clearBlueHighlights();
-        selectedPiece = null;
-
-        // Turn switching
-        game.switchTurn();
-        if (game.getClock() != null) game.getClock().switchTurn();
-
-        // Highlight check / play check sound
-        highlightKingCheck(game.getCurrentTurn());
-        if (game.getBoard().isInCheck(game.getCurrentTurn())) {
-            if (checkSound != null) checkSound.play();
-        }
-
-        // End conditions
-        if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
-            Player winner = (game.getCurrentTurn() == game.getPlayers()[0]) ? game.getPlayers()[1] : game.getPlayers()[0];
-            showGameOverOverlay("Checkmate!\n" + winner.getColor() + " wins!");
-        } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
-            showGameOverOverlay("Stalemate!\nDraw");
-        }
     }
 
     // ---------- PROMOTION UI ----------
@@ -743,5 +705,6 @@ public class GameScreen {
         Player loser = game.getCurrentTurn();
         Player winner = (game.getPlayers()[0] == loser ? game.getPlayers()[1] : game.getPlayers()[0]);
         showGameOverOverlay(winner.getColor() + " wins by resignation!");
+        endSound.play();
     }
 }

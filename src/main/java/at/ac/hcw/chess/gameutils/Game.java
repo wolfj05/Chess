@@ -3,7 +3,9 @@ package at.ac.hcw.chess.gameutils;
 import at.ac.hcw.chess.pieces.Piece;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Game {
     Board board;
