@@ -7,9 +7,11 @@ import java.util.Objects;
 public class Player {
     String color;
     Piece[] pieces = new Piece[16];
+    String avatarSrc;
 
-    public Player(String color) {
+    public Player(String color, String avatarSrc) {
         this.color = color;
+        this.avatarSrc = avatarSrc;
 
         if(color.equals("White")) {
             for (int i = 0; i < 8; i++) {
@@ -48,5 +50,13 @@ public class Player {
 
     public void setPieces(Piece[] pieces) {
         this.pieces = pieces;
+    }
+
+    public String getAvatarSrc() {
+        return avatarSrc;
+    }
+
+    public void setAvatarSrc(String avatarSrc) {
+        this.avatarSrc = avatarSrc;
     }
 }

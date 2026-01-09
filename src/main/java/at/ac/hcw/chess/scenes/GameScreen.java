@@ -175,8 +175,16 @@ public class GameScreen {
         HBox blackHeader = new HBox();
         blackHeader.setAlignment(Pos.CENTER_LEFT);
 
+        ImageView blackAvatar = new ImageView(new Image(Objects.requireNonNull(getClass().getResource(game.getPlayers()[1].getAvatarSrc())).toExternalForm()));
+        blackAvatar.setPreserveRatio(true);
+        blackAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
+        blackAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
+
         Label blackName = new Label("Black");
         blackName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        HBox blackNameBox = new HBox(12, blackAvatar, blackName);
+        blackNameBox.setAlignment(Pos.CENTER_LEFT);
 
         blackClockLabel = new Label("10:00");
         blackClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
@@ -184,7 +192,7 @@ public class GameScreen {
         Region spacer1 = new Region();
         HBox.setHgrow(spacer1, Priority.ALWAYS);
 
-        blackHeader.getChildren().addAll(blackName, spacer1, blackClockLabel);
+        blackHeader.getChildren().addAll(blackNameBox, spacer1, blackClockLabel);
 
         // CAPTURED BLACK – OVERLAP 30%
         blackCapturedRow = new HBox();
@@ -194,9 +202,51 @@ public class GameScreen {
         blackMaterialLabel.setStyle("-fx-font-size: 18px;");
 
         VBox blackSection = new VBox(8, blackHeader, blackCapturedRow, blackMaterialLabel);
-
-
+        
         //──────────── MENU BUTTONS ────────────
+        VBox menuBox = getMenuButtons();
+
+        //──────────── WHITE PLAYER ────────────
+        HBox whiteHeader = new HBox();
+        whiteHeader.setAlignment(Pos.CENTER_LEFT);
+
+        ImageView whiteAvatar = new ImageView(new Image(Objects.requireNonNull(getClass().getResource(game.getPlayers()[0].getAvatarSrc())).toExternalForm()));
+        whiteAvatar.setPreserveRatio(true);
+        whiteAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
+        whiteAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
+
+        Label whiteName = new Label("White");
+        whiteName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        HBox whiteNameBox = new HBox(12, whiteAvatar, whiteName);
+        whiteNameBox.setAlignment(Pos.CENTER_LEFT);
+
+        whiteClockLabel = new Label("10:00");
+        whiteClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        whiteHeader.getChildren().addAll(whiteNameBox, spacer2, whiteClockLabel);
+
+        whiteCapturedRow = new HBox();
+        whiteCapturedRow.setSpacing(-squareSize * 0.20);
+
+        whiteMaterialLabel = new Label();
+        whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
+
+        VBox whiteSection = new VBox(8, whiteMaterialLabel, whiteCapturedRow, whiteHeader);
+
+
+        // BUILD LEFT PANEL
+        leftPanel.getChildren().clear();
+        leftPanel.setTop(blackSection);
+        leftPanel.setCenter(menuBox);
+        leftPanel.setBottom(whiteSection);
+
+    }
+
+    private VBox getMenuButtons() {
         Button restart = new Button("Restart");
         restart.setOnAction(e -> sceneManager.restartGame());
 
@@ -212,39 +262,7 @@ public class GameScreen {
 
         VBox menuBox = new VBox(12, restart, resign, back);
         menuBox.setAlignment(Pos.CENTER);
-
-
-        //──────────── WHITE PLAYER ────────────
-        HBox whiteHeader = new HBox();
-        whiteHeader.setAlignment(Pos.CENTER_LEFT);
-
-        Label whiteName = new Label("White");
-        whiteName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
-
-        whiteClockLabel = new Label("10:00");
-        whiteClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
-
-        Region spacer2 = new Region();
-        HBox.setHgrow(spacer2, Priority.ALWAYS);
-
-        whiteHeader.getChildren().addAll(whiteName, spacer2, whiteClockLabel);
-
-        whiteCapturedRow = new HBox();
-        whiteCapturedRow.setSpacing(-squareSize * 0.20);
-
-        whiteMaterialLabel = new Label();
-        whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
-
-        VBox whiteSection = new VBox(8, whiteMaterialLabel, whiteCapturedRow, whiteHeader);
-
-
-        // BUILD LEFT PANEL
-        leftPanel.getChildren().clear();
-        //leftPanel.getChildren().addAll(blackSection, menuBox, whiteSection);
-        leftPanel.setTop(blackSection);
-        leftPanel.setCenter(menuBox);
-        leftPanel.setBottom(whiteSection);
-
+        return menuBox;
     }
 
     private String btn() {
@@ -566,7 +584,6 @@ public class GameScreen {
 
         // replace pawn with chosen piece (use correct src)
         switch (type.toLowerCase()) {
-            case "queen" -> board.getSquare(x, y).setPiece(new Queen(player, player.getColor().equals("White") ? "/white_queen.png" : "/black_queen.png"));
             case "rook"  -> board.getSquare(x, y).setPiece(new Rook(player, player.getColor().equals("White") ? "/white_rook.png"  : "/black_rook.png"));
             case "bishop"-> board.getSquare(x, y).setPiece(new Bishop(player, player.getColor().equals("White") ? "/white_bishop.png": "/black_bishop.png"));
             case "knight"-> board.getSquare(x, y).setPiece(new Knight(player, player.getColor().equals("White") ? "/white_knight.png": "/black_knight.png"));
@@ -589,7 +606,6 @@ public class GameScreen {
         // record promotion move in history (append promotion piece letter)
         String base = getMoveNotation(move);
         String promoSuffix = switch (type.toLowerCase()) {
-            case "queen" -> "=Q";
             case "rook" -> "=R";
             case "bishop" -> "=B";
             case "knight" -> "=N";

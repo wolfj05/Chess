@@ -18,8 +18,8 @@ public class Game {
     private int startTime = 10 * 60 * 1000;
 
     public Game() {
-        this.players[0] = new Player("White");
-        this.players[1] = new Player("Black");
+        this.players[0] = new Player("White", "/man.png");
+        this.players[1] = new Player("Black", "/woman.png");
         currentTurn = this.players[0];
 
         this.clock = new Clock(startTime);

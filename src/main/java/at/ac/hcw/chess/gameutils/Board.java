@@ -340,18 +340,18 @@ public class Board {
 
         // King + minor vs King
         if (white.size() == 1 && black.isEmpty())
-            return white.get(0) instanceof Bishop || white.get(0) instanceof Knight;
+            return white.getFirst() instanceof Bishop || white.getFirst() instanceof Knight;
 
         if (black.size() == 1 && white.isEmpty())
-            return black.get(0) instanceof Bishop || black.get(0) instanceof Knight;
+            return black.getFirst() instanceof Bishop || black.getFirst() instanceof Knight;
 
         // King + bishop vs King + bishop (same color squares)
         if (white.size() == 1 && black.size() == 1
-                && white.get(0) instanceof Bishop
-                && black.get(0) instanceof Bishop) {
+                && white.getFirst() instanceof Bishop
+                && black.getFirst() instanceof Bishop) {
 
-            Square ws = white.get(0).getSquare();
-            Square bs = black.get(0).getSquare();
+            Square ws = white.getFirst().getSquare();
+            Square bs = black.getFirst().getSquare();
 
             boolean wDark = (ws.getRow() + ws.getCol()) % 2 == 1;
             boolean bDark = (bs.getRow() + bs.getCol()) % 2 == 1;
