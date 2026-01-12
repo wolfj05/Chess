@@ -18,12 +18,14 @@ public class MainMenu {
 
     private void createScene() {
         Button startButton = new Button("Start Game");
+        Button rulesButton = new Button("Rules");
         Button exitButton = new Button("End Game");
-        VBox layout = new VBox(10, startButton, exitButton);
+        VBox layout = new VBox(10, startButton, rulesButton, exitButton);
         layout.setStyle("-fx-alignment: center; -fx-padding: 30;");
         scene = new Scene(layout, 400, 300);
 
         startButton.setOnAction(e -> sceneManager.startGame());
+        rulesButton.setOnAction(e -> sceneManager.showRules());
         exitButton.setOnAction(e -> sceneManager.exitGame());
     }
 

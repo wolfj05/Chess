@@ -10,8 +10,8 @@ import java.util.Map;
 public class Game {
     Board board;
     Player[] players = new Player[2];
-    Player currentTurn;
-    List<String> moveHistory = new ArrayList<>();
+    private Player currentTurn;
+    List<Move> moveHistory = new ArrayList<>();
     private final List<Piece> capturedWhite = new ArrayList<>();
     private final List<Piece> capturedBlack = new ArrayList<>();
     private Clock clock;
@@ -35,7 +35,11 @@ public class Game {
         return currentTurn;
     }
 
-    public List<String> getMoveHistory() {
+    public Player getNotCurrentTurn() {
+        return currentTurn.equals(players[0]) ? players[1] : players[0];
+    }
+
+    public List<Move> getMoveHistory() {
         return moveHistory;
     }
 
@@ -53,6 +57,10 @@ public class Game {
 
     public void setClock(Clock clock) {
         this.clock = clock;
+    }
+
+    public void setCurrentTurn(Player currentTurn) {
+        this.currentTurn = currentTurn;
     }
 
     public void switchTurn(){
@@ -80,8 +88,8 @@ public class Game {
         startGame();
     }
 
-    public void addMoveToHistory(String notation) {
-        moveHistory.add(notation);
+    public void addMoveToHistory(Move move) {
+        moveHistory.add(move);
     }
 
     public void addCapturedPiece(Piece p) {

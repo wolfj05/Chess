@@ -78,4 +78,33 @@ public class Move {
                 (isEnPassant ? " en passant" : "") +
                 (isDoublePawnPush ? " double pawn push" : "");
     }
+
+    public String getMoveNotation() {
+        char file = (char) ('a' + this.getToX());
+        int rank = this.getToY() + 1;
+        String prefix = "";
+
+        Piece piece = this.getMovedPiece();
+        if (piece != null) {
+            String type = piece.getClass().getSimpleName();
+            switch (type) {
+                case "Knight" -> prefix = "N";
+                case "Bishop" -> prefix = "B";
+                case "Rook"   -> prefix = "R";
+                case "Queen"  -> prefix = "Q";
+                case "King"   -> prefix = "K";
+                default -> prefix = "";
+            }
+        }
+
+        if (this.getCapturedPiece() != null && prefix.equals("")) {
+            // pawn capture notation like exd5 would need from-file; simple "exd5" would require from-x
+            char fromFile = (char) ('a' + this.getFromX());
+            prefix = "" + fromFile + "x";
+        } else if (this.getCapturedPiece() != null) {
+            prefix += "x";
+        }
+
+        return prefix + file + rank;
+    }
 }

@@ -78,6 +78,10 @@ public class Board {
         return sq != null ? sq.getPiece() : null;
     }
 
+    public Game getGame() {
+        return game;
+    }
+
     public Move getLastMove() {
         return lastMove;
     }

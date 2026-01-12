@@ -66,7 +66,13 @@ public class Pawn extends Piece{
             }
         }
 
-        Move last = board.getLastMove();
+        //En-Passant
+        Move last = null;
+        List<Move> history = board.getGame().getMoveHistory();
+        if(!history.isEmpty()){
+            last = history.getLast();
+        }
+
         if (last != null && last.isDoublePawnPush()) {
 
             Piece lp = last.getMovedPiece();

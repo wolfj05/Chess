@@ -7,6 +7,7 @@ public class SceneManager {
     private final Stage stage;
     private GameScreen gameScreen;
     private final MainMenu mainMenu;
+    private final RulesScreen rules;
     private final Game game;
 
     public SceneManager(Stage stage, Game game) {
@@ -14,10 +15,15 @@ public class SceneManager {
         this.game = game;
         gameScreen = new GameScreen(this);
         mainMenu = new MainMenu(this);
+        rules = new RulesScreen(this);
     }
 
     public void showMainMenu() {
         mainMenu.show();
+    }
+
+    public void showRules(){
+        rules.show();
     }
 
     public void startGame() {

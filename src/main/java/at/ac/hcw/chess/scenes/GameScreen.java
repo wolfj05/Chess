@@ -3,7 +3,10 @@ package at.ac.hcw.chess.scenes;
 import at.ac.hcw.chess.gameutils.*;
 import at.ac.hcw.chess.pieces.*;
 import javafx.animation.AnimationTimer;
+import javafx.animation.Interpolator;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -17,6 +20,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.scene.media.AudioClip;
+import javafx.util.Duration;
 
 import java.util.*;
 
@@ -247,6 +251,9 @@ public class GameScreen {
     }
 
     private VBox getMenuButtons() {
+        Button undo = new Button("Undo");
+        undo.setOnAction(e -> undoLastMove());
+
         Button restart = new Button("Restart");
         restart.setOnAction(e -> sceneManager.restartGame());
 
@@ -256,11 +263,12 @@ public class GameScreen {
         Button back = new Button("Back to Menu");
         back.setOnAction(e -> sceneManager.showMainMenu());
 
+        undo.setStyle(btn());
         restart.setStyle(btn());
         resign.setStyle(btn());
         back.setStyle(btn());
 
-        VBox menuBox = new VBox(12, restart, resign, back);
+        VBox menuBox = new VBox(12, undo, restart, resign, back);
         menuBox.setAlignment(Pos.CENTER);
         return menuBox;
     }
@@ -333,10 +341,17 @@ public class GameScreen {
                     } else {
                         moveSound.play();
                     }
-                    String notation = getMoveNotation(m);
-                    game.addMoveToHistory(notation);
+                    game.addMoveToHistory(m);
                     updateMoveList();
-                    updatePieces();
+                    Piece movedPiece = selectedPiece;
+                    ImageView iv = movedPiece.getImageView();
+
+                    int fromRow = m.getFromX();
+                    int fromCol = m.getFromY();
+                    int toRow = m.getToX();
+                    int toCol = m.getToY();
+                    animateMove(iv, fromRow, fromCol, toRow, toCol, this::updatePieces);
+
                     updatePlayerPanels();
                     clearBlueHighlights();
                     selectedPiece = null;
@@ -604,14 +619,14 @@ public class GameScreen {
         if (board.isInCheck(game.getCurrentTurn()) && checkSound != null) checkSound.play();
 
         // record promotion move in history (append promotion piece letter)
-        String base = getMoveNotation(move);
+        String base = move.getMoveNotation();
         String promoSuffix = switch (type.toLowerCase()) {
             case "rook" -> "=R";
             case "bishop" -> "=B";
             case "knight" -> "=N";
             default -> "=Q";
         };
-        game.addMoveToHistory(base + promoSuffix);
+        game.addMoveToHistory(move);
         updateMoveList();
 
         // check for mate/stalemate
@@ -624,42 +639,11 @@ public class GameScreen {
     }
 
     // ---------- MOVE NOTATION & MOVE LIST ----------
-    private String getMoveNotation(Move move) {
-        if (move == null) return "";
-
-        char file = (char) ('a' + move.getToX());
-        int rank = move.getToY() + 1;
-        String prefix = "";
-
-        Piece piece = move.getMovedPiece();
-        if (piece != null) {
-            String type = piece.getClass().getSimpleName();
-            switch (type) {
-                case "Knight" -> prefix = "N";
-                case "Bishop" -> prefix = "B";
-                case "Rook"   -> prefix = "R";
-                case "Queen"  -> prefix = "Q";
-                case "King"   -> prefix = "K";
-                default -> prefix = "";
-            }
-        }
-
-        if (move.getCapturedPiece() != null && prefix.equals("")) {
-            // pawn capture notation like exd5 would need from-file; simple "exd5" would require from-x
-            char fromFile = (char) ('a' + move.getFromX());
-            prefix = "" + fromFile + "x";
-        } else if (move.getCapturedPiece() != null) {
-            prefix += "x";
-        }
-
-        return prefix + file + rank;
-    }
-
     private void updateMoveList() {
         moveListBox.getChildren().clear();
-        List<String> history = List.copyOf(game.getMoveHistory());
+        List<Move> history = List.copyOf(game.getMoveHistory());
         for (int i = 0; i < history.size(); i++) {
-            String txt = history.get(i);
+            String txt = history.get(i).getMoveNotation();
             Label lbl = new Label((i + 1) + ". " + txt);
             lbl.setStyle("-fx-font-size: 16px; -fx-text-fill: black;");
             moveListBox.getChildren().add(lbl);
@@ -722,5 +706,99 @@ public class GameScreen {
         Player winner = (game.getPlayers()[0] == loser ? game.getPlayers()[1] : game.getPlayers()[0]);
         showGameOverOverlay(winner.getColor() + " wins by resignation!");
         endSound.play();
+    }
+
+    private void animateMove(
+            ImageView pieceView,
+            int fromRow, int fromCol,
+            int toRow, int toCol,
+            Runnable onFinished
+    ) {
+        StackPane fromSquare = getSquareNode(fromRow, fromCol);
+        StackPane toSquare = getSquareNode(toRow, toCol);
+
+        if (fromSquare == null || toSquare == null) {
+            onFinished.run();
+            return;
+        }
+
+        // Start- und Zielposition relativ zum Grid
+        Bounds start = fromSquare.localToScene(fromSquare.getBoundsInLocal());
+        Bounds end = toSquare.localToScene(toSquare.getBoundsInLocal());
+
+        double dx = end.getMinX() - start.getMinX();
+        double dy = end.getMinY() - start.getMinY();
+
+        TranslateTransition tt = new TranslateTransition(Duration.millis(180), pieceView);
+        tt.setByX(dx);
+        tt.setByY(dy);
+        tt.setInterpolator(Interpolator.EASE_OUT);
+
+        tt.setOnFinished(e -> {
+            pieceView.setTranslateX(0);
+            pieceView.setTranslateY(0);
+            onFinished.run();
+        });
+
+        tt.play();
+    }
+
+    private void undoLastMove() {
+        if (game.getMoveHistory().isEmpty()) return;
+
+        Move m = game.getMoveHistory().removeLast();
+
+        // Figuren zurücksetzen
+        Square from = game.getBoard().getSquare(m.getFromX(), m.getFromY());
+        Square to = game.getBoard().getSquare(m.getToX(), m.getToY());
+
+        if(m.isPromotion()){
+            to.setPiece(null);
+            Pawn p = new Pawn(game.getCurrentTurn(), "/" + game.getCurrentTurn().getColor().toLowerCase() + "_pawn.png");
+            from.setPiece(p);
+            p.setSquare(from);
+        } else {
+            to.setPiece(null);
+            from.setPiece(m.getMovedPiece());
+            m.getMovedPiece().setSquare(from);
+        }
+
+        // Capture rückgängig machen
+        if (m.getCapturedPiece() != null && !m.isEnPassant()) {
+            to.setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(to);
+        }
+
+        if(m.isEnPassant()){
+            game.getBoard().getSquare(to.getRow(), from.getCol()).setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(game.getBoard().getSquare(to.getRow(), from.getCol()));
+        }
+
+        if(m.isCastle()){
+            Piece r;
+            if(m.getToX() == 6){
+                r = game.getBoard().getSquare(5, m.getFromY()).getPiece();
+                r.setSquare(game.getBoard().getSquare(7, m.getFromY()));
+
+                game.getBoard().getSquare(5, m.getFromY()).setPiece(null);
+                game.getBoard().getSquare(7, m.getFromY()).setPiece(r);
+            } else {
+                r = game.getBoard().getSquare(3, m.getFromY()).getPiece();
+                r.setSquare(game.getBoard().getSquare(0, m.getFromY()));
+
+                game.getBoard().getSquare(3, m.getFromY()).setPiece(null);
+                game.getBoard().getSquare(0, m.getFromY()).setPiece(r);
+            }
+            r.setHasMoved(false);
+            m.getMovedPiece().setHasMoved(false);
+        }
+
+        // Zugrecht zurück
+        game.setCurrentTurn(game.getNotCurrentTurn());
+
+        // Uhr zurücksetzen / stoppen
+        game.getClock().switchTurn();
+
+        updatePieces();
     }
 }
