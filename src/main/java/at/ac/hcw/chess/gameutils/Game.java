@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Game {
+    private String whitePlayerName; // Name User1
+    private String blackPlayerName; //  NAme User2
+
     Board board;
     Player[] players = new Player[2];
     Player currentTurn;

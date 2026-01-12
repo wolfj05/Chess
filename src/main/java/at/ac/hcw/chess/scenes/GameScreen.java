@@ -4,29 +4,29 @@ import at.ac.hcw.chess.gameutils.*;
 import at.ac.hcw.chess.pieces.Piece;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.Node;
+import javafx.stage.Screen;
+import javafx.fxml.FXMLLoader;
+
 
 import java.util.ArrayList;
 import java.util.List;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Screen;
-import javafx.util.Duration;
-import java.util.Objects;
 
 public class GameScreen {
 
     private Scene scene;
     private final SceneManager sceneManager;
     private final Game game;
+    private String whiteName;
+    private String blackName;
+
 
     private GridPane squareGrid;
     private StackPane gameView;
@@ -34,23 +34,44 @@ public class GameScreen {
 
     private double squareSize;
     private Piece selectedPiece = null;
-    private List<Move> legalMovesForSelected = new ArrayList<>();
-    private List<StackPane> blueHighlights = new ArrayList<>();
+    private final List<Move> legalMovesForSelected = new ArrayList<>();
+    private final List<StackPane> blueHighlights = new ArrayList<>();
     private StackPane redKingSquare = null;
 
     public GameScreen(SceneManager sceneManager) {
-        this.game = sceneManager.getGame();
         this.sceneManager = sceneManager;
+        this.game = sceneManager.getGame();
+        this.whiteName = sceneManager.getWhitePlayerName();
+        this.blackName = sceneManager.getBlackPlayerName();
+
         createScene();
     }
 
     private void createScene() {
-        double screenWidth = Screen.getPrimary().getBounds().getWidth();
+
+        String whiteName = sceneManager.getWhitePlayerName();                // Namen aus SceneManager holen
+        String blackName = sceneManager.getBlackPlayerName();
+
+        Label blackPlayerLabel = new Label(blackName);                       // Labels (BLACK oben links im freien Bereich, WHITE unten links)
+        blackPlayerLabel.setStyle("""
+                -fx-font-size: 26px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #1a1a1a;
+                """);
+
+        Label whitePlayerLabel = new Label(whiteName);
+        whitePlayerLabel.setStyle("""
+                -fx-font-size: 26px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #ffffff;
+                """);
+
         double screenHeight = Screen.getPrimary().getBounds().getHeight();
+
         Image boardImage = new Image("/board.png");
         ImageView boardView = new ImageView(boardImage);
         boardView.setPreserveRatio(true);
-        boardView.setFitHeight(screenHeight*.9); // schöne Größe
+        boardView.setFitHeight(screenHeight * .9);
         boardView.setSmooth(true);
 
         // --- GameView StackPane ---
@@ -62,7 +83,29 @@ public class GameScreen {
         squareGrid = new GridPane();
         gameView.getChildren().add(squareGrid);
 
-        // --- Berechne Square-Größe basierend auf Board ---
+        // --- Sidebar links: oben BLACK, unten WHITE ---
+        VBox sidebar = new VBox();
+        sidebar.setPadding(new Insets(12, 12, 12, 12));      // weniger Abstand
+        sidebar.setAlignment(Pos.TOP_RIGHT);                                // Inhalt rechtsbündig Richtung Brett
+        sidebar.setMinWidth(180);
+        sidebar.setMaxWidth(180);
+        sidebar.setPrefWidth(180);
+
+// VBox darf NICHT die ganze StackPane-Breite nehmen
+        sidebar.setFillWidth(false);
+
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        sidebar.getChildren().addAll(
+                blackPlayerLabel,
+                spacer,
+                whitePlayerLabel
+        );
+
+
+        // Berechne Square-Größe basierend auf Board
         boardView.boundsInParentProperty().addListener((obs, oldBounds, newBounds) -> {
             if (newBounds.getWidth() == 0 || newBounds.getHeight() == 0) return;
 
@@ -71,12 +114,10 @@ public class GameScreen {
             double innerSize = totalSize * (1 - 2 * borderRatio);
             squareSize = innerSize / 8.0;
 
-            // GridPane exakt auf Board
             squareGrid.setPrefSize(innerSize, innerSize);
             squareGrid.setMinSize(innerSize, innerSize);
             squareGrid.setMaxSize(innerSize, innerSize);
 
-            // Squares nur initial erstellen
             if (squareGrid.getChildren().isEmpty()) {
                 for (int x = 0; x < 8; x++) {
                     for (int y = 0; y < 8; y++) {
@@ -87,16 +128,23 @@ public class GameScreen {
                         final int fx = x;
                         final int fy = y;
                         square.setOnMouseClicked(e -> handleSquareClick(fx, fy));
-                        squareGrid.add(square, x, 7 - y); // invertierte Y-Achse
+                        squareGrid.add(square, x, 7 - y);
                     }
                 }
             }
 
             updatePieces();
             highlightKingInCheck(game.getCurrentTurn());
+            // Sidebar links neben das Brett setzen (z.B. 30px Abstand)
+
+            double gap = 30;
+            double boardHalf = newBounds.getWidth() / 2.0;
+                                                                                        // Sidebar soll links NEBEN dem Brett stehen (vom Zentrum aus):
+            sidebar.setTranslateX(-(boardHalf + gap + sidebar.getPrefWidth() / 2.0));   // Sidebar links neben Board (vom Zentrum aus gerechnet)
+
         });
 
-        // --- Sidebar & Buttons ---
+        // --- Back Button ---
         Button backButton = new Button("Back to Menu");
         backButton.setStyle("""
                 -fx-background-color: #5b4636;
@@ -105,59 +153,38 @@ public class GameScreen {
                 -fx-background-radius: 10;
                 -fx-padding: 6 12 6 12;
                 """);
+        backButton.setOnAction(e -> sceneManager.showMainMenu());
 
-        VBox sidebar = new VBox(15);
-        sidebar.setPadding(new Insets(30));
-        sidebar.setAlignment(Pos.TOP_CENTER);
-        sidebar.setPrefWidth(425);
-
-        Button restartButton = new Button("Restart Game");
-        restartButton.setStyle("""
-                -fx-background-color: #5b4636;
-                -fx-text-fill: white;
-                -fx-font-weight: bold;
-                -fx-background-radius: 10;
-                -fx-padding: 10 20 10 20;
-                """);
-        restartButton.setOnAction(e -> {
-            sceneManager.restartGame();
-        });
-
-        Button settingsButton = new Button("Settings");
-        settingsButton.setStyle("""
-                -fx-background-color: #5b4636;
-                -fx-text-fill: white;
-                -fx-font-weight: bold;
-                -fx-background-radius: 10;
-                -fx-padding: 10 20 10 20;
-                """);
-
-        sidebar.getChildren().addAll(restartButton, settingsButton);
-
+        // --- Layout ---
         StackPane.setAlignment(backButton, Pos.TOP_RIGHT);
         StackPane.setMargin(backButton, new Insets(10, 10, 0, 0));
 
-        HBox layout = new HBox(sidebar, gameView, backButton);
-        layout.setStyle("""
-        -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
-        """);
-
         StackPane root = new StackPane();
-        root.getChildren().add(layout);
+        root.setStyle("""
+                -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
+                """);
+
+
+        root.getChildren().add(gameView);                               // Board immer exakt zentriert
+
+        StackPane.setAlignment(sidebar, Pos.CENTER);
+        root.getChildren().add(sidebar);
+
+
+        StackPane.setAlignment(backButton, Pos.TOP_RIGHT);              // Back Button oben rechts
+        StackPane.setMargin(backButton, new Insets(20));
+        root.getChildren().add(backButton);
 
         scene = new Scene(root, 1920, 1080);
 
-        backButton.setOnAction(e -> sceneManager.showMainMenu());
     }
 
     private void updatePieces() {
-        // Alle bisherigen Pieces aus Squares entfernen
         for (Node n : squareGrid.getChildren()) {
             StackPane square = (StackPane) n;
             square.getChildren().removeIf(node -> node instanceof ImageView);
         }
 
-        // Pieces in Squares einfügen und zentrieren
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 Square sq = game.getBoard().getSquare(x, y);
@@ -171,7 +198,7 @@ public class GameScreen {
                     StackPane square = getSquareNode(x, y);
                     if (square != null) {
                         square.getChildren().add(pieceView);
-                        StackPane.setAlignment(pieceView, Pos.CENTER); // zentrieren
+                        StackPane.setAlignment(pieceView, Pos.CENTER);
                         p.setImageView(pieceView);
                     }
                 }
@@ -183,7 +210,6 @@ public class GameScreen {
         Square square = game.getBoard().getSquare(x, y);
         Piece piece = square.getPiece();
 
-        // Auswahl einer Figur
         if (selectedPiece == null) {
             if (piece != null && piece.getPlayer() == game.getCurrentTurn()) {
                 selectPiece(piece);
@@ -191,7 +217,6 @@ public class GameScreen {
             return;
         }
 
-        // Move ausführen
         boolean isLegalMove = false;
         for (Move m : legalMovesForSelected) {
             if (m.getToX() == x && m.getToY() == y) {
@@ -215,7 +240,6 @@ public class GameScreen {
             }
         }
 
-        // Neue Auswahl eigener Figur
         if (!isLegalMove && piece != null && piece.getPlayer() == game.getCurrentTurn()) {
             clearBlueHighlights();
             selectPiece(piece);
@@ -225,14 +249,12 @@ public class GameScreen {
     private void selectPiece(Piece piece) {
         selectedPiece = piece;
 
-        // Alle möglichen Moves berechnen
         List<Move> moves = piece.calcValidMoves(
                 game.getBoard(),
                 piece.getSquare().getRow(),
                 piece.getSquare().getCol()
         );
 
-        // Moves filtern: König darf nicht ins Schach gesetzt werden
         legalMovesForSelected.clear();
         for (Move m : moves) {
             Board copy = game.getBoard().deepCopy();
@@ -260,7 +282,6 @@ public class GameScreen {
     }
 
     private void highlightKingInCheck(Player player) {
-        // alten roten Rahmen entfernen
         if (redKingSquare != null) {
             redKingSquare.setBorder(null);
             redKingSquare = null;
@@ -315,59 +336,45 @@ public class GameScreen {
 
         gameOverOverlay = new StackPane();
         gameOverOverlay.setStyle("""
-        -fx-background-color: rgba(0, 0, 0, 0.65);
-    """);
+                -fx-background-color: rgba(0, 0, 0, 0.65);
+                """);
 
-        gameOverOverlay.setPrefSize(
-                scene.getWidth(),
-                scene.getHeight()
-        );
+        gameOverOverlay.setPrefSize(scene.getWidth(), scene.getHeight());
 
         VBox box = new VBox(20);
         box.setAlignment(Pos.CENTER);
 
-        javafx.scene.control.Label label = new javafx.scene.control.Label(message);
+        Label label = new Label(message);
         label.setStyle("""
-        -fx-text-fill: white;
-        -fx-font-size: 64px;
-        -fx-font-weight: bold;
-    """);
+                -fx-text-fill: white;
+                -fx-font-size: 64px;
+                -fx-font-weight: bold;
+                """);
 
         Button restart = new Button("Restart Game");
         restart.setStyle("""
-        -fx-background-color: #ffffff;
-        -fx-text-fill: black;
-        -fx-font-size: 24px;
-        -fx-padding: 12 24 12 24;
-        -fx-background-radius: 12;
-    """);
-        restart.setOnAction(e -> {
-            sceneManager.restartGame();
-        });
+                -fx-background-color: #ffffff;
+                -fx-text-fill: black;
+                -fx-font-size: 24px;
+                -fx-padding: 12 24 12 24;
+                -fx-background-radius: 12;
+                """);
+        restart.setOnAction(e -> sceneManager.restartGame());
 
         Button back = new Button("Back to Menu");
         back.setStyle("""
-        -fx-background-color: #ffffff;
-        -fx-text-fill: black;
-        -fx-font-size: 24px;
-        -fx-padding: 12 24 12 24;
-        -fx-background-radius: 12;
-    """);
+                -fx-background-color: #ffffff;
+                -fx-text-fill: black;
+                -fx-font-size: 24px;
+                -fx-padding: 12 24 12 24;
+                -fx-background-radius: 12;
+                """);
         back.setOnAction(e -> sceneManager.showMainMenu());
 
         box.getChildren().addAll(label, restart, back);
-
         gameOverOverlay.getChildren().add(box);
 
-        // 🎯 Auf oberster Ebene einfügen
         StackPane root = (StackPane) scene.getRoot();
         root.getChildren().add(gameOverOverlay);
-    }
-
-    private void hideGameOverOverlay() {
-        if (gameOverOverlay != null) {
-            gameView.getChildren().remove(gameOverOverlay);
-            gameOverOverlay = null;
-        }
     }
 }
