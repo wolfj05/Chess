@@ -9,7 +9,6 @@ import java.util.List;
 public class Game {
     private String whitePlayerName; // Name User1
     private String blackPlayerName; //  NAme User2
-
     private Board board;
     private Player[] players = new Player[2];
     private Player currentTurn;
@@ -18,6 +17,7 @@ public class Game {
     private final List<Piece> capturedBlack = new ArrayList<>();
     private Clock clock;
     private int startTime = 10 * 60 * 1000;
+    private boolean mute;
 
     public Game() {
         this.players[0] = new Player("White", "/man.png");
@@ -43,6 +43,23 @@ public class Game {
 
     public List<Move> getMoveHistory() {
         return moveHistory;
+    }
+
+    public int getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(int startTime) {
+        this.startTime = startTime * 60 * 1000;
+        this.clock = new Clock(this.startTime);
+    }
+
+    public boolean isMute() {
+        return mute;
+    }
+
+    public void setMute(boolean mute) {
+        this.mute = mute;
     }
 
     public Board getBoard() {

@@ -70,9 +70,6 @@ public class GameScreen {
     private AudioClip endSound;
     private AudioClip pattSound;
 
-    // OVERLAY
-    private StackPane gameOverOverlay;
-
     public GameScreen(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
         this.game = sceneManager.getGame();
@@ -83,7 +80,6 @@ public class GameScreen {
     }
 
     private void createScene() {
-
         // LOAD SOUNDS
         moveSound    = new AudioClip(Objects.requireNonNull(getClass().getResource("/move.wav")).toString());
         captureSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/capture.wav")).toString());
@@ -93,25 +89,6 @@ public class GameScreen {
 
         // BOARD IMAGE
         ImageView boardView = new ImageView(new Image("/board.png"));
-
-        String whiteName = sceneManager.getWhitePlayerName();                // Namen aus SceneManager holen
-        String blackName = sceneManager.getBlackPlayerName();
-
-        Label blackPlayerLabel = new Label(blackName);                       // Labels (BLACK oben links im freien Bereich, WHITE unten links)
-        blackPlayerLabel.setStyle("""
-                -fx-font-size: 26px;
-                -fx-font-weight: bold;
-                -fx-text-fill: #1a1a1a;
-                """);
-
-        Label whitePlayerLabel = new Label(whiteName);
-        whitePlayerLabel.setStyle("""
-                -fx-font-size: 26px;
-                -fx-font-weight: bold;
-                -fx-text-fill: #ffffff;
-                """);
-
-        double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
         boardView.setPreserveRatio(true);
         boardView.setFitHeight(Screen.getPrimary().getBounds().getHeight() * 0.9);
@@ -194,7 +171,7 @@ public class GameScreen {
         scene = new Scene(new StackPane(layout));
         sceneManager.getStage().setScene(scene);
 
-        game.setClock(new Clock(10 * 60 * 1000));
+        game.setClock(new Clock(game.getStartTime()));
         game.getClock().start();
         startClockUpdater();
     }
@@ -210,13 +187,13 @@ public class GameScreen {
         blackAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
         blackAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
 
-        Label blackName = new Label("Black");
+        Label blackName = new Label(sceneManager.getBlackPlayerName());
         blackName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
 
         HBox blackNameBox = new HBox(12, blackAvatar, blackName);
         blackNameBox.setAlignment(Pos.CENTER_LEFT);
 
-        blackClockLabel = new Label("10:00");
+        blackClockLabel = new Label(game.getClock().format(game.getClock().getBlackTime()));
         blackClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
 
         Region spacer1 = new Region();
@@ -245,13 +222,13 @@ public class GameScreen {
         whiteAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
         whiteAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
 
-        Label whiteName = new Label("White");
+        Label whiteName = new Label(sceneManager.getWhitePlayerName());
         whiteName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
 
         HBox whiteNameBox = new HBox(12, whiteAvatar, whiteName);
         whiteNameBox.setAlignment(Pos.CENTER_LEFT);
 
-        whiteClockLabel = new Label("10:00");
+        whiteClockLabel = new Label(game.getClock().format(game.getClock().getWhiteTime()));
         whiteClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
 
         Region spacer2 = new Region();
@@ -280,21 +257,17 @@ public class GameScreen {
         Button undo = new Button("Undo");
         undo.setOnAction(e -> {game.undoLastMove(); updatePieces();});
 
-        Button restart = new Button("Restart");
-        restart.setOnAction(e -> sceneManager.restartGame());
-
         Button resign = new Button("Resign");
         resign.setOnAction(e -> onResign());
 
-        Button back = new Button("Back to Menu");
-        back.setOnAction(e -> sceneManager.showMainMenu());
+        Button back = new Button("Pause");
+        back.setOnAction(e -> sceneManager.pauseGame());
 
         undo.setStyle(btn());
-        restart.setStyle(btn());
         resign.setStyle(btn());
         back.setStyle(btn());
 
-        VBox menuBox = new VBox(12, undo, restart, resign, back);
+        VBox menuBox = new VBox(12, undo, resign, back);
         menuBox.setAlignment(Pos.CENTER);
         return menuBox;
     }
@@ -361,9 +334,13 @@ public class GameScreen {
                 } else {
                     game.getBoard().makeMove(m);
                     if (m.getCapturedPiece() != null) {
-                        captureSound.play();
+                        if(!game.isMute()) {
+                            captureSound.play();
+                        }
                     } else {
-                        moveSound.play();
+                        if(!game.isMute()) {
+                            moveSound.play();
+                        }
                     }
                     game.addMoveToHistory(m);
                     updateMoveList();
@@ -384,18 +361,24 @@ public class GameScreen {
                     highlightKingCheck(game.getCurrentTurn());
                     isValidMove = true;
                     if (game.getBoard().isInCheck(game.getCurrentTurn())) {
-                        checkSound.play();
+                        if(!game.isMute()) {
+                            checkSound.play();
+                        }
                     }
                     if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
                         String winner = (game.getCurrentTurn() == game.getPlayers()[0]) ? "Black wins!" : "White wins!";
                         showGameOverOverlay("Checkmate!\n" + winner);
-                        endSound.play();
+                        if(!game.isMute()) {
+                            endSound.play();
+                        }
                     } else if (game.getBoard().isStalemate(game.getCurrentTurn())
                             || game.getBoard().hasInsufficientMaterial()
                             || game.getBoard().isFiftyMoveRule()
                             || game.getBoard().isThreefoldRepetition()) {
                         showGameOverOverlay("Stalemate! Draw");
-                        pattSound.play();
+                        if(!game.isMute()) {
+                            pattSound.play();
+                        }
                     }
                 }
                 break;
@@ -506,7 +489,7 @@ public class GameScreen {
         Button r = new Button("Restart");
         Button b = new Button("Back to Menu");
         r.setOnAction(e -> sceneManager.restartGame());
-        b.setOnAction(e -> sceneManager.showMainMenu());
+        b.setOnAction(e -> sceneManager.showStartScreen());
         r.setStyle(btn());
         b.setStyle(btn());
 
@@ -641,7 +624,7 @@ public class GameScreen {
         if (game.getClock() != null) game.getClock().switchTurn();
 
         highlightKingCheck(game.getCurrentTurn());
-        if (board.isInCheck(game.getCurrentTurn()) && checkSound != null) checkSound.play();
+        if (board.isInCheck(game.getCurrentTurn()) && checkSound != null && !game.isMute()) checkSound.play();
 
         // record promotion move in history (append promotion piece letter)
         String base = move.getMoveNotation();
@@ -730,7 +713,9 @@ public class GameScreen {
         Player loser = game.getCurrentTurn();
         Player winner = (game.getPlayers()[0] == loser ? game.getPlayers()[1] : game.getPlayers()[0]);
         showGameOverOverlay(winner.getColor() + " wins by resignation!");
-        endSound.play();
+        if(!game.isMute()) {
+            endSound.play();
+        }
     }
 
     private void animateMove(

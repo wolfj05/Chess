@@ -7,27 +7,26 @@ import javafx.scene.control.Button;
 
 import java.io.IOException;
 
-public class MainMenu {
+public class PauseScreen {
 
     private final SceneManager sceneManager;
     private Scene scene;
 
-    public MainMenu(SceneManager sceneManager) {
+    public PauseScreen(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
         createScene();
     }
 
     private void createScene() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("main_menu.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("pause.fxml"));
             Parent root = loader.load();
 
             Button continueButton = (Button) root.lookup("#continueButton");
-            Button exitButton = (Button) root.lookup("#exitButton");
+            Button menuButton = (Button) root.lookup("#menuButton");
             Button restartButton = (Button) root.lookup("#restartButton");
-            Button revangeButton = (Button) root.lookup("#revangeButton");
 
-            if (continueButton == null || exitButton == null || restartButton == null || revangeButton == null) {
+            if (continueButton == null || menuButton == null || restartButton == null) {
                 throw new RuntimeException("MainMenu: FXML Elemente fehlen (fx:id stimmt nicht).");
             }
 
@@ -35,18 +34,15 @@ public class MainMenu {
             continueButton.setOnAction(e -> sceneManager.continueGame());
 
             // EXIT = Programm schließen
-            exitButton.setOnAction(e -> sceneManager.exitGame());
+            menuButton.setOnAction(e -> sceneManager.showStartScreen());
 
             // RESTART = zurück zum StartScreen (Setup neu)
-            restartButton.setOnAction(e -> sceneManager.restartToStartScreen());
-
-            // REVANGE = neue Runde direkt (ohne Setup)
-            revangeButton.setOnAction(e -> sceneManager.revengeSamePlayers());
+            restartButton.setOnAction(e -> sceneManager.restartGame());
 
             scene = new Scene(root, 700, 450);
 
         } catch (IOException | NullPointerException e) {
-            throw new RuntimeException("Could not load main_menu.fxml", e);
+            throw new RuntimeException("Could not load pause.fxml", e);
         }
     }
 
