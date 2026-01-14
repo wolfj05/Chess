@@ -1,0 +1,5 @@
+.selected {
+    -fx-border-color: black;
+    -fx-border-width: 3;
+    -fx-border-radius: 14;
+}

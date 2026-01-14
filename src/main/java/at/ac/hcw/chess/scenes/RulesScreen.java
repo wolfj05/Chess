@@ -86,6 +86,17 @@ public class RulesScreen {
         );
 
         // ---------- SCROLL ----------
+        VBox layout = getRules(rulesBox, title);
+
+        StackPane root = new StackPane(layout);
+        root.setStyle("""
+            -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
+        """);
+
+        scene = new Scene(root);
+    }
+
+    private VBox getRules(VBox rulesBox, Label title) {
         ScrollPane scrollPane = new ScrollPane(rulesBox);
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("""
@@ -102,19 +113,13 @@ public class RulesScreen {
             -fx-padding: 10 18;
             -fx-background-radius: 10;
         """);
-        back.setOnAction(e -> sceneManager.showMainMenu());
+        back.setOnAction(e -> sceneManager.showStartScreen());
 
         // ---------- MAIN LAYOUT ----------
         VBox layout = new VBox(25, title, scrollPane, back);
         layout.setAlignment(Pos.TOP_CENTER);
         layout.setPadding(new Insets(30));
-
-        StackPane root = new StackPane(layout);
-        root.setStyle("""
-            -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
-        """);
-
-        scene = new Scene(root);
+        return layout;
     }
 
     private VBox rule(String title, String text) {

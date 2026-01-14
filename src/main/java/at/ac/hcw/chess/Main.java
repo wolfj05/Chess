@@ -41,6 +41,7 @@ public class Main extends Application {
 //            return;
 //        }
 
+        assert iconStream != null;
         stage.getIcons().add(new Image(iconStream));
     }
 

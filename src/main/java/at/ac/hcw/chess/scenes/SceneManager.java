@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 public class SceneManager {
     private final Stage stage;
     private GameScreen gameScreen;
-    private final MainMenu mainMenu;
+    private final PauseScreen pauseScreen;
     private final RulesScreen rules;
     private final Game game;
     private final StartScreen startScreen;
@@ -19,8 +19,7 @@ public class SceneManager {
         this.game = game;
         startScreen = new StartScreen(this);
         gameScreen = new GameScreen(this);
-        mainMenu = new MainMenu(this);
-
+        pauseScreen = new PauseScreen(this);
         rules = new RulesScreen(this);
     }
 
@@ -28,9 +27,9 @@ public class SceneManager {
         startScreen.show();
     }
 
-
-    public void showMainMenu() {
-        mainMenu.show();
+    public void pauseGame() {
+        game.getClock().stop();
+        pauseScreen.show();
     }
 
     public void showRules(){
@@ -39,13 +38,12 @@ public class SceneManager {
 
     public void continueGame() {
         if (gameScreen != null) {
+            game.getClock().start();
             gameScreen.show();
         } else {
-            // Falls noch kein Spiel existiert: zurück zum StartScreen
             showStartScreen();
         }
     }
-
 
     public void startGame() {
         game.startGame();
@@ -71,19 +69,6 @@ public class SceneManager {
         this.gameScreen = new GameScreen(this);
         gameScreen.show();
     }
-    // Restart = zurück zum StartScreen (Spieler neu bestimmen)
-    public void restartToStartScreen() {
-        game.restartGame();     // optional aber sauber: board resetten
-        showStartScreen();      // jetzt wieder Namen eingeben
-    }
-
-    // Revenge = Partie reset, aber Namen bleiben gleich (direkt ins Spiel)
-    public void revengeSamePlayers() {
-        game.restartGame();
-        GameScreen gs = new GameScreen(this);
-        this.gameScreen = gs;
-        gs.show();
-    }
 
     // Setter: StartScreen ruft das auf
     public void setPlayerNames(String whiteName, String blackName) {
@@ -99,18 +84,5 @@ public class SceneManager {
     public String getBlackPlayerName() {
         return blackPlayerName;
     }
-
-//    // Restart = zurück zum StartScreen (Spieler neu bestimmen)
-//    public void restartToStartScreen() {
-//        showStartScreen();
-//    }
-//
-//    // Revenge = Partie reset, aber Namen bleiben gleich
-//    public void revengeSamePlayers() {
-//        game.restartGame();
-//        GameScreen gs = new GameScreen(this);
-//        this.gameScreen = gs;
-//        gs.show();
-//    }
 }
 

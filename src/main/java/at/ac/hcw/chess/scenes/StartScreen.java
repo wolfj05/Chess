@@ -1,13 +1,16 @@
 package at.ac.hcw.chess.scenes;
 
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Random;
 
 public class StartScreen {
@@ -30,14 +33,20 @@ public class StartScreen {
             TextField p1Field = (TextField) root.lookup("#player1Field");
             TextField p2Field = (TextField) root.lookup("#player2Field");
 
-            ImageView whiteIcon = (ImageView) root.lookup("#whitePieceIcon");
-            ImageView blackIcon = (ImageView) root.lookup("#blackPieceIcon");
+            ImageView player1Icon = (ImageView) root.lookup("#whitePieceIcon");
+            ImageView player2Icon = (ImageView) root.lookup("#blackPieceIcon");
 
+            Button switchButton = (Button) root.lookup("#switchButton");
             Button randomButton = (Button) root.lookup("#randomButton");
+            Button rulesButton = (Button) root.lookup("#rulesButton");
             ToggleButton muteToggle = (ToggleButton) root.lookup("#muteToggle");
 
             Button startButton = (Button) root.lookup("#startButton");
             Button exitButton = (Button) root.lookup("#exitButton");
+
+            Button tenMin = (Button) root.lookup("#tenMin");
+            Button fiveMin = (Button) root.lookup("#fiveMin");
+            Button threeMin = (Button) root.lookup("#threeMin");
 
             if (p1Field == null || p2Field == null
                     || randomButton == null || muteToggle == null
@@ -46,19 +55,70 @@ public class StartScreen {
             }
 
             // Icons laden (falls vorhanden)
-            if (whiteIcon != null) {
-                whiteIcon.setImage(new Image(getClass().getResourceAsStream("/white_pawn.png")));
+            if (player1Icon != null) {
+                player1Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_pawn.png"))));
             }
-            if (blackIcon != null) {
-                blackIcon.setImage(new Image(getClass().getResourceAsStream("/black_pawn.png")));
+            if (player2Icon != null) {
+                player2Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/black_pawn.png"))));
             }
 
             randomButton.setOnAction(e -> {
                 player1IsWhite = new Random().nextBoolean();
-                System.out.println("Random colors -> player1IsWhite = " + player1IsWhite);
+                assert player1Icon != null;
+                if(player1IsWhite){
+                    player1Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_pawn.png"))));
+                    assert player2Icon != null;
+                    player2Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/black_pawn.png"))));
+                } else {
+                    player1Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/black_pawn.png"))));
+                    assert player2Icon != null;
+                    player2Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_pawn.png"))));
+                }
             });
 
-            muteToggle.setOnAction(e -> System.out.println("Mute: " + muteToggle.isSelected()));
+            switchButton.setOnAction(e -> {
+                player1IsWhite = !player1IsWhite;
+                assert player1Icon != null;
+                if(player1IsWhite){
+                    player1Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_pawn.png"))));
+                    assert player2Icon != null;
+                    player2Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/black_pawn.png"))));
+                } else {
+                    player1Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/black_pawn.png"))));
+                    assert player2Icon != null;
+                    player2Icon.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/white_pawn.png"))));
+                }
+            });
+
+            rulesButton.setOnAction(e -> sceneManager.showRules());
+
+            muteToggle.setOnAction(e -> {
+                sceneManager.getGame().setMute(muteToggle.isSelected());
+                if(muteToggle.isSelected()){
+                    muteToggle.setText("Unmute");
+                } else {
+                    muteToggle.setText("Mute");
+                }
+            });
+
+            tenMin.setOnAction(e -> {
+                sceneManager.getGame().setStartTime(10);
+                threeMin.getStyleClass().remove("selected");
+                fiveMin.getStyleClass().remove("selected");
+                tenMin.getStyleClass().add("selected");
+            });
+            fiveMin.setOnAction(e -> {
+                sceneManager.getGame().setStartTime(5);
+                threeMin.getStyleClass().remove("selected");
+                fiveMin.getStyleClass().add("selected");
+                tenMin.getStyleClass().remove("selected");
+            });
+            threeMin.setOnAction(e -> {
+                sceneManager.getGame().setStartTime(3);
+                threeMin.getStyleClass().add("selected");
+                fiveMin.getStyleClass().remove("selected");
+                tenMin.getStyleClass().remove("selected");
+            });
 
             startButton.setOnAction(e -> {
                 String name1 = p1Field.getText().trim();
@@ -76,14 +136,8 @@ public class StartScreen {
                 String white = player1IsWhite ? name1 : name2;
                 String black = player1IsWhite ? name2 : name1;
 
-                System.out.println("StartScreen computed -> WHITE=" + white + " BLACK=" + black);
-
                 // Namen wirklich speichern
                 sceneManager.setPlayerNames(white, black);
-
-                // Kontroll-Log direkt danach
-                System.out.println("SceneManager now has -> WHITE=" + sceneManager.getWhitePlayerName()
-                        + " BLACK=" + sceneManager.getBlackPlayerName());
 
                 sceneManager.startGame();
             });

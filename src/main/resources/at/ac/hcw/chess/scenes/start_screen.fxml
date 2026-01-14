@@ -5,95 +5,201 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
-<StackPane xmlns="http://javafx.com/javafx"
+<BorderPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           style="-fx-background-color: white;">
+           style="
+             -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);"
+           stylesheets="@start_screen.css">
+    <center>
+    <StackPane BorderPane.alignment="CENTER">
+        <!-- CONTENT -->
+        <VBox alignment="CENTER" spacing="32"
+              style="-fx-padding: 60;">
 
-    <!-- CARD / Rahmen -->
-    <StackPane prefWidth="900" prefHeight="520"
-               style="-fx-background-color: #f7f7f7;
-                      -fx-background-radius: 28;
-                      -fx-border-color: #444444;
-                      -fx-border-width: 6;
-                      -fx-border-radius: 28;">
+            <!-- TITLE -->
+            <Label text="CHESS"
+                   style="
+                     -fx-font-size: 46;
+                     -fx-font-weight: 900;
+                     -fx-text-fill: #2f1f14;
+                     -fx-letter-spacing: 2;
+                   "/>
 
-        <!-- INHALT (zentriert) -->
-        <VBox alignment="CENTER" spacing="26" style="-fx-padding: 55;">
+            <!-- MAIN -->
+            <HBox alignment="CENTER" spacing="80">
 
-            <!-- Title -->
-            <Label text=" Welcome!! LET'S PLAY CHESS"
-                   style="-fx-font-size: 44; -fx-font-weight: 800;"/>
+                <!-- PLAYERS -->
+                <VBox spacing="26" alignment="CENTER_LEFT">
 
-            <!-- MAIN ROW -->
-            <HBox alignment="CENTER" spacing="70">
-
-                <!-- LEFT: Player I + Player II (gleiche X-Position) -->
-                <VBox spacing="22" alignment="CENTER_LEFT">
-
-                    <VBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Player I" style="-fx-font-size: 16; -fx-font-weight: 800;"/>
+                    <VBox spacing="10">
+                        <Label text="Player 1"
+                               style="-fx-font-size: 16; -fx-font-weight: 800;"/>
                         <TextField fx:id="player1Field"
                                    promptText="Name eingeben"
-                                   prefWidth="360"
-                                   style="-fx-background-radius: 12; -fx-border-radius: 12; -fx-padding: 10;"/>
+                                   prefWidth="340"
+                                   style="
+                                     -fx-background-radius: 14;
+                                     -fx-border-radius: 14;
+                                     -fx-padding: 12;
+                                   "/>
                     </VBox>
 
-                    <VBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Player II" style="-fx-font-size: 16; -fx-font-weight: 800;"/>
+                    <VBox spacing="10">
+                        <Label text="Player 2"
+                               style="-fx-font-size: 16; -fx-font-weight: 800;"/>
                         <TextField fx:id="player2Field"
                                    promptText="Name eingeben"
-                                   prefWidth="360"
-                                   style="-fx-background-radius: 12; -fx-border-radius: 12; -fx-padding: 10;"/>
+                                   prefWidth="340"
+                                   style="
+                                     -fx-background-radius: 14;
+                                     -fx-border-radius: 14;
+                                     -fx-padding: 12;
+                                   "/>
                     </VBox>
 
                 </VBox>
 
-                <!-- CENTER: Icons -->
-                <VBox alignment="CENTER" spacing="14">
-                    <ImageView fx:id="whitePieceIcon" fitWidth="78" fitHeight="78" preserveRatio="true"/>
-                    <Label text="⇅" style="-fx-font-size: 26; -fx-font-weight: 800;"/>
-                    <ImageView fx:id="blackPieceIcon" fitWidth="78" fitHeight="78" preserveRatio="true"/>
+                <!-- COLORS -->
+                <VBox alignment="CENTER" spacing="16">
+                    <ImageView fx:id="whitePieceIcon"
+                               fitWidth="82"
+                               fitHeight="82"
+                               preserveRatio="true"/>
+
+                    <Button fx:id="switchButton"
+                            text="⇅"
+                            prefWidth="170"
+                            prefHeight="44"
+                            style="
+                              -fx-background-color: #5b4636;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;
+                            "/>
+
+                    <ImageView fx:id="blackPieceIcon"
+                               fitWidth="82"
+                               fitHeight="82"
+                               preserveRatio="true"/>
                 </VBox>
 
-                <!-- RIGHT: Random -->
-                <VBox alignment="CENTER" spacing="12">
+                <!-- RANDOM -->
+                <VBox alignment="CENTER">
                     <Button fx:id="randomButton"
                             text="Random"
-                            prefWidth="190"
+                            prefWidth="170"
                             prefHeight="44"
-                            style="-fx-background-radius: 14; -fx-font-weight: 800;"/>
+                            style="
+                              -fx-background-color: #5b4636;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;
+                            "/>
                 </VBox>
 
             </HBox>
 
-            <!-- ACTION BUTTONS -->
-            <HBox alignment="CENTER" spacing="18">
+            <VBox alignment="CENTER" spacing="14">
+                <Label text="Time"
+                       style="-fx-font-size: 16; -fx-font-weight: 800;"/>
+
+                <HBox alignment="CENTER">
+                    <Button fx:id="tenMin"
+                            text="10 Min."
+                            prefWidth="170"
+                            prefHeight="42"
+                            style="-fx-background-color: #303030;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;"
+                            styleClass="selected"/>
+
+                    <Button fx:id="fiveMin"
+                            text="5 Min."
+                            prefWidth="170"
+                            prefHeight="42"
+                            style="-fx-background-color: #303030;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;"/>
+
+                    <Button fx:id="threeMin"
+                            text="3 Min."
+                            prefWidth="170"
+                            prefHeight="42"
+                            style="-fx-background-color: #303030;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;"/>
+                </HBox>
+
+            </VBox>
+
+            <!-- ACTIONS -->
+            <HBox alignment="CENTER" spacing="24">
                 <Button fx:id="startButton"
                         text="Start Game"
-                        prefWidth="220"
-                        prefHeight="44"
-                        style="-fx-background-radius: 14; -fx-font-weight: 800;"/>
+                        prefWidth="240"
+                        prefHeight="48"
+                        style="-fx-background-color: #5b4636;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;"/>
+
                 <Button fx:id="exitButton"
-                        text="End Game"
-                        prefWidth="220"
-                        prefHeight="44"
-                        style="-fx-background-radius: 14; -fx-font-weight: 800;"/>
+                        text="Exit Game"
+                        prefWidth="240"
+                        prefHeight="48"
+                        style="-fx-background-color: #5b4636;
+                    -fx-text-fill: white;
+                    -fx-padding: 10 18;
+                    -fx-background-radius: 16;
+                    -fx-font-size: 16;
+                    -fx-font-weight: 800;"/>
             </HBox>
-
         </VBox>
+    </StackPane>
+    </center>
 
-        <!-- MUTE: Overlay unten rechts mit Abstand -->
+    <!-- RULES -->
+    <bottom>
+    <HBox spacing="14"
+          BorderPane.alignment="BOTTOM_RIGHT">
+        <BorderPane.margin>
+            <Insets left="10" bottom="10"/>
+        </BorderPane.margin>
+
+        <Button fx:id="rulesButton"
+                text="Rules"
+                prefWidth="90"
+                prefHeight="44"
+                style="-fx-background-color: #5b4636;
+                   -fx-text-fill: white;
+                   -fx-background-radius: 14;
+                   -fx-font-size: 16;
+                   -fx-font-weight: 800;"/>
+
         <ToggleButton fx:id="muteToggle"
                       text="Mute"
-                      prefWidth="92"
-                      prefHeight="92"
-                      style="-fx-background-radius: 999; -fx-font-weight: 800;"
-                      StackPane.alignment="BOTTOM_RIGHT">
-            <StackPane.margin>
-                <Insets top="0" right="40" bottom="40" left="0"/>
-            </StackPane.margin>
-        </ToggleButton>
-
-    </StackPane>
-
-</StackPane>
+                      prefWidth="90"
+                      prefHeight="44"
+                      style="-fx-background-color: #5b4636;
+                         -fx-text-fill: white;
+                         -fx-background-radius: 14;
+                         -fx-font-size: 16;
+                         -fx-font-weight: 800;"/>
+    </HBox>
+    </bottom>
+</BorderPane>
