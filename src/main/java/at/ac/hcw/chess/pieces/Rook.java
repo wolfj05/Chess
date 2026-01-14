@@ -35,7 +35,7 @@ public class Rook extends Piece{
                     moves.add(new Move(x, y, nx, ny, this, null,
                             false, null, false, false, false));
                 } else {
-                    if (target.player != this.player) {
+                    if (target.getPlayer() != this.getPlayer()) {
                         moves.add(new Move(x, y, nx, ny, this, target,
                                 false, null, false, false, false));
                     }

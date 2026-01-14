@@ -1,23 +1,28 @@
 package at.ac.hcw.chess.scenes;
 
 import at.ac.hcw.chess.gameutils.*;
-import at.ac.hcw.chess.pieces.Piece;
+import at.ac.hcw.chess.pieces.*;
+import javafx.animation.AnimationTimer;
+import javafx.animation.Interpolator;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
-import javafx.fxml.FXMLLoader;
+import javafx.scene.media.AudioClip;
+import javafx.util.Duration;
 
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class GameScreen {
 
@@ -28,15 +33,45 @@ public class GameScreen {
     private String blackName;
 
 
+    // BOARD
     private GridPane squareGrid;
     private StackPane gameView;
     private StackPane gameOverOverlay = null;
 
     private double squareSize;
+
+    // PANELS
+    private BorderPane leftPanel;
+    private VBox moveListPane;
+    private VBox moveListBox;
+
+    // CLOCK LABELS (top = black, bottom = white)
+    private Label blackClockLabel;
+    private Label whiteClockLabel;
+
+    // CAPTURED PIECES
+    private HBox blackCapturedRow;
+    private HBox whiteCapturedRow;
+
+    // MATERIAL LABELS
+    private Label blackMaterialLabel;
+    private Label whiteMaterialLabel;
+
+    // MOVE LOGIC
     private Piece selectedPiece = null;
     private final List<Move> legalMovesForSelected = new ArrayList<>();
     private final List<StackPane> blueHighlights = new ArrayList<>();
     private StackPane redKingSquare = null;
+
+    // SOUNDS
+    private AudioClip moveSound;
+    private AudioClip captureSound;
+    private AudioClip checkSound;
+    private AudioClip endSound;
+    private AudioClip pattSound;
+
+    // OVERLAY
+    private StackPane gameOverOverlay;
 
     public GameScreen(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
@@ -48,6 +83,16 @@ public class GameScreen {
     }
 
     private void createScene() {
+
+        // LOAD SOUNDS
+        moveSound    = new AudioClip(Objects.requireNonNull(getClass().getResource("/move.wav")).toString());
+        captureSound = new AudioClip(Objects.requireNonNull(getClass().getResource("/capture.wav")).toString());
+        checkSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/check.mp3")).toString());
+        endSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/end.mp3")).toString());
+        pattSound   = new AudioClip(Objects.requireNonNull(getClass().getResource("/patt.mp3")).toString());
+
+        // BOARD IMAGE
+        ImageView boardView = new ImageView(new Image("/board.png"));
 
         String whiteName = sceneManager.getWhitePlayerName();                // Namen aus SceneManager holen
         String blackName = sceneManager.getBlackPlayerName();
@@ -68,56 +113,32 @@ public class GameScreen {
 
         double screenHeight = Screen.getPrimary().getBounds().getHeight();
 
-        Image boardImage = new Image("/board.png");
-        ImageView boardView = new ImageView(boardImage);
         boardView.setPreserveRatio(true);
-        boardView.setFitHeight(screenHeight * .9);
+        boardView.setFitHeight(Screen.getPrimary().getBounds().getHeight() * 0.9);
         boardView.setSmooth(true);
 
-        // --- GameView StackPane ---
         gameView = new StackPane();
         gameView.setAlignment(Pos.CENTER);
         gameView.getChildren().add(boardView);
 
-        // --- GridPane für klickbare Squares ---
         squareGrid = new GridPane();
         gameView.getChildren().add(squareGrid);
 
-        // --- Sidebar links: oben BLACK, unten WHITE ---
-        VBox sidebar = new VBox();
-        sidebar.setPadding(new Insets(12, 12, 12, 12));      // weniger Abstand
-        sidebar.setAlignment(Pos.TOP_RIGHT);                                // Inhalt rechtsbündig Richtung Brett
-        sidebar.setMinWidth(180);
-        sidebar.setMaxWidth(180);
-        sidebar.setPrefWidth(180);
+        squareGrid.boundsInParentProperty().addListener((obs, o, n) -> {
+            double w = boardView.getBoundsInParent().getWidth();
+            double h = boardView.getBoundsInParent().getHeight();
+            if (w == 0 || h == 0) return;
 
-// VBox darf NICHT die ganze StackPane-Breite nehmen
-        sidebar.setFillWidth(false);
+            double borderRatio = 0.048; // 5% außen ringsum
 
-
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        sidebar.getChildren().addAll(
-                blackPlayerLabel,
-                spacer,
-                whitePlayerLabel
-        );
-
-
-        // Berechne Square-Größe basierend auf Board
-        boardView.boundsInParentProperty().addListener((obs, oldBounds, newBounds) -> {
-            if (newBounds.getWidth() == 0 || newBounds.getHeight() == 0) return;
-
-            double borderRatio = 0.05;
-            double totalSize = boardView.getFitHeight();
-            double innerSize = totalSize * (1 - 2 * borderRatio);
+            double innerSize = h * (1 - 2 * borderRatio);
             squareSize = innerSize / 8.0;
 
             squareGrid.setPrefSize(innerSize, innerSize);
             squareGrid.setMinSize(innerSize, innerSize);
             squareGrid.setMaxSize(innerSize, innerSize);
 
+            // Grid-Erstellung falls noch nicht vorhanden
             if (squareGrid.getChildren().isEmpty()) {
                 for (int x = 0; x < 8; x++) {
                     for (int y = 0; y < 8; y++) {
@@ -125,138 +146,276 @@ public class GameScreen {
                         square.setPrefSize(squareSize, squareSize);
                         square.setMinSize(squareSize, squareSize);
                         square.setMaxSize(squareSize, squareSize);
-                        final int fx = x;
-                        final int fy = y;
-                        square.setOnMouseClicked(e -> handleSquareClick(fx, fy));
+
+                        final int fx = x, fy = y;
+
+                        square.setOnMouseClicked(e -> onSquareClick(fx, fy));
+
                         squareGrid.add(square, x, 7 - y);
                     }
                 }
             }
 
-            updatePieces();
-            highlightKingInCheck(game.getCurrentTurn());
-            // Sidebar links neben das Brett setzen (z.B. 30px Abstand)
-
-            double gap = 30;
-            double boardHalf = newBounds.getWidth() / 2.0;
-                                                                                        // Sidebar soll links NEBEN dem Brett stehen (vom Zentrum aus):
-            sidebar.setTranslateX(-(boardHalf + gap + sidebar.getPrefWidth() / 2.0));   // Sidebar links neben Board (vom Zentrum aus gerechnet)
-
+            Platform.runLater(() -> {
+                updatePieces();
+                highlightKingCheck(game.getCurrentTurn());
+            });
         });
 
-        // --- Back Button ---
-        Button backButton = new Button("Back to Menu");
-        backButton.setStyle("""
-                -fx-background-color: #5b4636;
-                -fx-text-fill: white;
-                -fx-font-weight: bold;
-                -fx-background-radius: 10;
-                -fx-padding: 6 12 6 12;
-                """);
-        backButton.setOnAction(e -> sceneManager.showMainMenu());
+        // Left Panel (22% WIDTH)
+        leftPanel = new BorderPane();
+        leftPanel.setPadding(new Insets(20));
+        leftPanel.prefWidthProperty().bind(sceneManager.getStage().widthProperty().multiply(0.22));
+        leftPanel.setStyle("-fx-background-color: transparent;");
 
-        // --- Layout ---
-        StackPane.setAlignment(backButton, Pos.TOP_RIGHT);
-        StackPane.setMargin(backButton, new Insets(10, 10, 0, 0));
+        buildLeftPanelContent();
 
-        StackPane root = new StackPane();
-        root.setStyle("""
-                -fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);
-                """);
+        // MOVE LIST RIGHT
+        moveListBox = new VBox(8);
+        moveListBox.setPadding(new Insets(20));
+        moveListBox.prefWidthProperty().bind(sceneManager.getStage().widthProperty().multiply(0.22));
+        ScrollPane scroll = new ScrollPane(moveListBox);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("""
+       -fx-background-color: transparent;
+       -fx-background: transparent;
+       -fx-control-inner-background: transparent;
+       -fx-padding: 0;
+""");
+
+        moveListPane = new VBox(scroll);
+        moveListPane.setPadding(new Insets(20));
+        moveListPane.setStyle("-fx-background-color: rgba(40,40,40,0.45); -fx-background-radius: 20;");
+
+        HBox layout = new HBox(30, leftPanel, gameView, moveListPane);
+        layout.setPadding(new Insets(20));
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);");
+
+        scene = new Scene(new StackPane(layout));
+        sceneManager.getStage().setScene(scene);
+
+        game.setClock(new Clock(10 * 60 * 1000));
+        game.getClock().start();
+        startClockUpdater();
+    }
+
+    private void buildLeftPanelContent() {
+
+        //Black
+        HBox blackHeader = new HBox();
+        blackHeader.setAlignment(Pos.CENTER_LEFT);
+
+        ImageView blackAvatar = new ImageView(new Image(Objects.requireNonNull(getClass().getResource(game.getPlayers()[1].getAvatarSrc())).toExternalForm()));
+        blackAvatar.setPreserveRatio(true);
+        blackAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
+        blackAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
+
+        Label blackName = new Label("Black");
+        blackName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        HBox blackNameBox = new HBox(12, blackAvatar, blackName);
+        blackNameBox.setAlignment(Pos.CENTER_LEFT);
+
+        blackClockLabel = new Label("10:00");
+        blackClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        Region spacer1 = new Region();
+        HBox.setHgrow(spacer1, Priority.ALWAYS);
+
+        blackHeader.getChildren().addAll(blackNameBox, spacer1, blackClockLabel);
+
+        // CAPTURED BLACK – OVERLAP 30%
+        blackCapturedRow = new HBox();
+        blackCapturedRow.setSpacing(-squareSize * 0.20);
+
+        blackMaterialLabel = new Label();
+        blackMaterialLabel.setStyle("-fx-font-size: 18px;");
+
+        VBox blackSection = new VBox(8, blackHeader, blackCapturedRow, blackMaterialLabel);
+
+        //Menu
+        VBox menuBox = getMenuButtons();
+
+        // White
+        HBox whiteHeader = new HBox();
+        whiteHeader.setAlignment(Pos.CENTER_LEFT);
+
+        ImageView whiteAvatar = new ImageView(new Image(Objects.requireNonNull(getClass().getResource(game.getPlayers()[0].getAvatarSrc())).toExternalForm()));
+        whiteAvatar.setPreserveRatio(true);
+        whiteAvatar.setFitHeight(sceneManager.getStage().widthProperty().get() * 0.04);
+        whiteAvatar.setFitWidth(sceneManager.getStage().widthProperty().get() * 0.04);
+
+        Label whiteName = new Label("White");
+        whiteName.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        HBox whiteNameBox = new HBox(12, whiteAvatar, whiteName);
+        whiteNameBox.setAlignment(Pos.CENTER_LEFT);
+
+        whiteClockLabel = new Label("10:00");
+        whiteClockLabel.setStyle("-fx-font-size: 26px; -fx-font-weight: bold;");
+
+        Region spacer2 = new Region();
+        HBox.setHgrow(spacer2, Priority.ALWAYS);
+
+        whiteHeader.getChildren().addAll(whiteNameBox, spacer2, whiteClockLabel);
+
+        whiteCapturedRow = new HBox();
+        whiteCapturedRow.setSpacing(-squareSize * 0.20);
+
+        whiteMaterialLabel = new Label();
+        whiteMaterialLabel.setStyle("-fx-font-size: 18px;");
+
+        VBox whiteSection = new VBox(8, whiteMaterialLabel, whiteCapturedRow, whiteHeader);
 
 
-        root.getChildren().add(gameView);                               // Board immer exakt zentriert
-
-        StackPane.setAlignment(sidebar, Pos.CENTER);
-        root.getChildren().add(sidebar);
-
-
-        StackPane.setAlignment(backButton, Pos.TOP_RIGHT);              // Back Button oben rechts
-        StackPane.setMargin(backButton, new Insets(20));
-        root.getChildren().add(backButton);
-
-        scene = new Scene(root, 1920, 1080);
+        // BUILD LEFT PANEL
+        leftPanel.getChildren().clear();
+        leftPanel.setTop(blackSection);
+        leftPanel.setCenter(menuBox);
+        leftPanel.setBottom(whiteSection);
 
     }
 
+    private VBox getMenuButtons() {
+        Button undo = new Button("Undo");
+        undo.setOnAction(e -> {game.undoLastMove(); updatePieces();});
+
+        Button restart = new Button("Restart");
+        restart.setOnAction(e -> sceneManager.restartGame());
+
+        Button resign = new Button("Resign");
+        resign.setOnAction(e -> onResign());
+
+        Button back = new Button("Back to Menu");
+        back.setOnAction(e -> sceneManager.showMainMenu());
+
+        undo.setStyle(btn());
+        restart.setStyle(btn());
+        resign.setStyle(btn());
+        back.setStyle(btn());
+
+        VBox menuBox = new VBox(12, undo, restart, resign, back);
+        menuBox.setAlignment(Pos.CENTER);
+        return menuBox;
+    }
+
+    private String btn() {
+        return """
+            -fx-background-color: #5b4636;
+            -fx-text-fill: white;
+            -fx-font-size: 18px;
+            -fx-padding: 10 18;
+            -fx-background-radius: 10;
+        """;
+    }
+
     private void updatePieces() {
+        // Remove old piece images
+        if (squareGrid == null) return;
         for (Node n : squareGrid.getChildren()) {
             StackPane square = (StackPane) n;
             square.getChildren().removeIf(node -> node instanceof ImageView);
         }
 
+        // Place pieces
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 Square sq = game.getBoard().getSquare(x, y);
                 Piece p = sq.getPiece();
                 if (p != null) {
                     p.setSquare(sq);
-                    ImageView pieceView = new ImageView(new Image(p.getSrc()));
-                    pieceView.setFitWidth(squareSize);
-                    pieceView.setFitHeight(squareSize);
-
-                    StackPane square = getSquareNode(x, y);
-                    if (square != null) {
-                        square.getChildren().add(pieceView);
-                        StackPane.setAlignment(pieceView, Pos.CENTER);
-                        p.setImageView(pieceView);
+                    ImageView iv = new ImageView(new Image(p.getSrc()));
+                    iv.setFitWidth(squareSize);
+                    iv.setFitHeight(squareSize);
+                    StackPane squareNode = getSquareNode(x, y);
+                    if (squareNode != null) {
+                        squareNode.getChildren().add(iv);
+                        StackPane.setAlignment(iv, Pos.CENTER);
+                        p.setImageView(iv);
                     }
                 }
             }
         }
+
+        // after pieces placed, ensure captured rows spacing adapts if squareSize changed
+        double overlap = (squareSize > 0) ? -squareSize * 0.25 : -24;
+        blackCapturedRow.setSpacing(overlap);
+        whiteCapturedRow.setSpacing(overlap);
     }
 
-    private void handleSquareClick(int x, int y) {
+    private void onSquareClick(int x, int y) {
         Square square = game.getBoard().getSquare(x, y);
         Piece piece = square.getPiece();
-
-        if (selectedPiece == null) {
-            if (piece != null && piece.getPlayer() == game.getCurrentTurn()) {
+        // Auswahl einer Figur
+        if (piece != null && selectedPiece == null) {
+            if (piece.getPlayer() == game.getCurrentTurn()) {
                 selectPiece(piece);
             }
             return;
-        }
-
-        boolean isLegalMove = false;
+        } // Move ausführen
+        boolean isValidMove = false;
         for (Move m : legalMovesForSelected) {
             if (m.getToX() == x && m.getToY() == y) {
-                game.getBoard().makeMove(m);
-                updatePieces();
-                clearBlueHighlights();
-                selectedPiece = null;
-                game.switchTurn();
-                highlightKingInCheck(game.getCurrentTurn());
-                isLegalMove = true;
+                if(m.isPromotion()){
+                    showPromotionPopup(selectedPiece, m);
+                } else {
+                    game.getBoard().makeMove(m);
+                    if (m.getCapturedPiece() != null) {
+                        captureSound.play();
+                    } else {
+                        moveSound.play();
+                    }
+                    game.addMoveToHistory(m);
+                    updateMoveList();
+                    Piece movedPiece = selectedPiece;
+                    ImageView iv = movedPiece.getImageView();
 
-                if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
-                    String winner = (game.getCurrentTurn() == game.getPlayers()[0])
-                            ? "Black wins!"
-                            : "White wins!";
-                    showGameOverOverlay("Checkmate!\n" + winner);
-                } else if (game.getBoard().isStalemate(game.getCurrentTurn())) {
-                    showGameOverOverlay("Stalemate!\nDraw");
+                    int fromRow = m.getFromX();
+                    int fromCol = m.getFromY();
+                    int toRow = m.getToX();
+                    int toCol = m.getToY();
+                    animateMove(iv, fromRow, fromCol, toRow, toCol, this::updatePieces);
+
+                    updatePlayerPanels();
+                    clearBlueHighlights();
+                    selectedPiece = null;
+                    game.switchTurn();
+                    game.getClock().switchTurn();
+                    highlightKingCheck(game.getCurrentTurn());
+                    isValidMove = true;
+                    if (game.getBoard().isInCheck(game.getCurrentTurn())) {
+                        checkSound.play();
+                    }
+                    if (game.getBoard().isCheckmate(game.getCurrentTurn())) {
+                        String winner = (game.getCurrentTurn() == game.getPlayers()[0]) ? "Black wins!" : "White wins!";
+                        showGameOverOverlay("Checkmate!\n" + winner);
+                        endSound.play();
+                    } else if (game.getBoard().isStalemate(game.getCurrentTurn())
+                            || game.getBoard().hasInsufficientMaterial()
+                            || game.getBoard().isFiftyMoveRule()
+                            || game.getBoard().isThreefoldRepetition()) {
+                        showGameOverOverlay("Stalemate! Draw");
+                        pattSound.play();
+                    }
                 }
                 break;
             }
         }
 
-        if (!isLegalMove && piece != null && piece.getPlayer() == game.getCurrentTurn()) {
+        if (piece != null && !isValidMove && piece.getPlayer() == game.getCurrentTurn()) {
             clearBlueHighlights();
             selectPiece(piece);
         }
     }
 
     private void selectPiece(Piece piece) {
+        if (piece == null || piece.getSquare() == null) return;
         selectedPiece = piece;
 
-        List<Move> moves = piece.calcValidMoves(
-                game.getBoard(),
-                piece.getSquare().getRow(),
-                piece.getSquare().getCol()
-        );
-
+        // calc moves and filter out illegal ones that leave king in check
+        List<Move> candidates = piece.calcValidMoves(game.getBoard(), piece.getSquare().getRow(), piece.getSquare().getCol());
         legalMovesForSelected.clear();
-        for (Move m : moves) {
+        for (Move m : candidates) {
             Board copy = game.getBoard().deepCopy();
             copy.makeMove(m);
             if (!copy.isInCheck(piece.getPlayer())) {
@@ -265,48 +424,48 @@ public class GameScreen {
         }
 
         highlightLegalMoves();
-        highlightKingInCheck(game.getCurrentTurn());
+        highlightKingCheck(game.getCurrentTurn());
     }
 
     private void highlightLegalMoves() {
         clearBlueHighlights();
-        for (Move move : legalMovesForSelected) {
-            StackPane square = getSquareNode(move.getToX(), move.getToY());
-            if (square != null) {
-                square.setBackground(new Background(
-                        new BackgroundFill(Color.rgb(0, 0, 255, 0.35), null, null)
-                ));
-                blueHighlights.add(square);
+        for (Move mv : List.copyOf(legalMovesForSelected)) {
+            StackPane node = getSquareNode(mv.getToX(), mv.getToY());
+            if (node != null) {
+                javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle();
+
+                dot.setRadius(squareSize * 0.15);     // Größe des Punktes
+                dot.setFill(Color.rgb(80, 80, 80, 0.55)); // halbtransparentes Grau
+
+                node.getChildren().add(dot);
+                StackPane.setAlignment(dot, Pos.CENTER);
+                blueHighlights.add(node);
             }
         }
     }
 
-    private void highlightKingInCheck(Player player) {
+    private void highlightKingCheck(Player player) {
+        // clear previous
         if (redKingSquare != null) {
             redKingSquare.setBorder(null);
             redKingSquare = null;
         }
 
         if (game.getBoard().isInCheck(player)) {
-            Square kingSquare = game.getBoard().findKing(player);
-            if (kingSquare != null) {
-                StackPane square = getSquareNode(kingSquare.getRow(), kingSquare.getCol());
-                if (square != null) {
-                    square.setBorder(new Border(new BorderStroke(
-                            Color.RED,
-                            BorderStrokeStyle.SOLID,
-                            CornerRadii.EMPTY,
-                            new BorderWidths(3)
-                    )));
-                    redKingSquare = square;
+            Square kingSq = game.getBoard().findKing(player);
+            if (kingSq != null) {
+                StackPane node = getSquareNode(kingSq.getRow(), kingSq.getCol());
+                if (node != null) {
+                    node.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(3))));
+                    redKingSquare = node;
                 }
             }
         }
     }
 
     private void clearBlueHighlights() {
-        for (StackPane sq : blueHighlights) {
-            sq.setBackground(null);
+        for (StackPane s : List.copyOf(blueHighlights)) {
+            s.getChildren().removeIf(n -> n instanceof javafx.scene.shape.Circle);
         }
         blueHighlights.clear();
     }
@@ -315,13 +474,13 @@ public class GameScreen {
         for (Node n : squareGrid.getChildren()) {
             Integer col = GridPane.getColumnIndex(n);
             Integer row = GridPane.getRowIndex(n);
-            if (col != null && row != null && col == x && row == (7 - y)) {
-                return (StackPane) n;
-            }
+            if (col == null || row == null) continue;
+            if (col == x && row == (7 - y)) return (StackPane) n;
         }
         return null;
     }
 
+    // ---------- WINDOW / SCENE ----------
     public void show() {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setFullScreenExitHint("");
@@ -333,48 +492,338 @@ public class GameScreen {
 
     private void showGameOverOverlay(String message) {
         if (gameOverOverlay != null) return;
+        if (game.getClock() != null) game.getClock().stop();
 
         gameOverOverlay = new StackPane();
-        gameOverOverlay.setStyle("""
-                -fx-background-color: rgba(0, 0, 0, 0.65);
-                """);
-
+        gameOverOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.65);");
         gameOverOverlay.setPrefSize(scene.getWidth(), scene.getHeight());
 
-        VBox box = new VBox(20);
+        VBox box = new VBox(16);
         box.setAlignment(Pos.CENTER);
+        Label msg = new Label(message);
+        msg.setStyle("-fx-font-size: 48px; -fx-text-fill: white; -fx-font-weight: bold;");
 
-        Label label = new Label(message);
-        label.setStyle("""
-                -fx-text-fill: white;
-                -fx-font-size: 64px;
-                -fx-font-weight: bold;
-                """);
+        Button r = new Button("Restart");
+        Button b = new Button("Back to Menu");
+        r.setOnAction(e -> sceneManager.restartGame());
+        b.setOnAction(e -> sceneManager.showMainMenu());
+        r.setStyle(btn());
+        b.setStyle(btn());
 
-        Button restart = new Button("Restart Game");
-        restart.setStyle("""
-                -fx-background-color: #ffffff;
-                -fx-text-fill: black;
-                -fx-font-size: 24px;
-                -fx-padding: 12 24 12 24;
-                -fx-background-radius: 12;
-                """);
-        restart.setOnAction(e -> sceneManager.restartGame());
-
-        Button back = new Button("Back to Menu");
-        back.setStyle("""
-                -fx-background-color: #ffffff;
-                -fx-text-fill: black;
-                -fx-font-size: 24px;
-                -fx-padding: 12 24 12 24;
-                -fx-background-radius: 12;
-                """);
-        back.setOnAction(e -> sceneManager.showMainMenu());
-
-        box.getChildren().addAll(label, restart, back);
+        box.getChildren().addAll(msg, r, b);
         gameOverOverlay.getChildren().add(box);
 
         StackPane root = (StackPane) scene.getRoot();
         root.getChildren().add(gameOverOverlay);
+    }
+
+    private void hideGameOverOverlay() {
+        if (gameOverOverlay != null) {
+            StackPane root = (StackPane) scene.getRoot();
+            root.getChildren().remove(gameOverOverlay);
+            gameOverOverlay = null;
+        }
+    }
+
+    // ---------- CLOCK UPDATER ----------
+    private void startClockUpdater() {
+        AnimationTimer t = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (game.getClock() == null) return;
+
+                try {
+                    blackClockLabel.setText(game.getClock().format(game.getClock().getBlackTime()));
+                    whiteClockLabel.setText(game.getClock().format(game.getClock().getWhiteTime()));
+                } catch (Exception ignored) {
+                }
+
+                if (game.getClock().getWhiteTime() <= 0) {
+                    showGameOverOverlay("Black wins (White ran out of time)");
+                    stop();
+                } else if (game.getClock().getBlackTime() <= 0) {
+                    showGameOverOverlay("White wins (Black ran out of time)");
+                    stop();
+                }
+            }
+        };
+        t.start();
+    }
+
+    // ---------- PROMOTION UI ----------
+    private void showPromotionPopup(Piece pawn, Move move) {
+        if (pawn == null || move == null) return;
+
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+        overlay.setPrefSize(scene.getWidth(), scene.getHeight());
+
+        VBox box = new VBox(16);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle("""
+            -fx-background-color: #f0e6d2;
+            -fx-padding: 18;
+            -fx-background-radius: 16;
+            -fx-border-radius: 16;
+            -fx-border-color: #5b4636;
+            -fx-border-width: 3;
+        """);
+
+        Label txt = new Label("Choose promotion piece:");
+        txt.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+
+        HBox buttons = new HBox(12);
+        buttons.setAlignment(Pos.CENTER);
+
+        Button q = new Button("Queen");
+        Button r = new Button("Rook");
+        Button b = new Button("Bishop");
+        Button n = new Button("Knight");
+
+        q.setStyle(btn());
+        r.setStyle(btn());
+        b.setStyle(btn());
+        n.setStyle(btn());
+
+        q.setOnAction(e -> {
+            finishPromotion(move, "queen");
+            ((StackPane) overlay.getParent()).getChildren().remove(overlay);
+        });
+        r.setOnAction(e -> {
+            finishPromotion(move, "rook");
+            ((StackPane) overlay.getParent()).getChildren().remove(overlay);
+        });
+        b.setOnAction(e -> {
+            finishPromotion(move, "bishop");
+            ((StackPane) overlay.getParent()).getChildren().remove(overlay);
+        });
+        n.setOnAction(e -> {
+            finishPromotion(move, "knight");
+            ((StackPane) overlay.getParent()).getChildren().remove(overlay);
+        });
+
+        buttons.getChildren().addAll(q, r, b, n);
+        box.getChildren().addAll(txt, buttons);
+        overlay.getChildren().add(box);
+
+        // füge Overlay zur obersten Ebene hinzu
+        StackPane root = (StackPane) scene.getRoot();
+        root.getChildren().add(overlay);
+    }
+
+    private void finishPromotion(Move move, String type) {
+        if (move == null || type == null) return;
+
+        Board board = game.getBoard();
+        // make the move first (captures handled inside)
+        board.makeMove(move);
+
+        Player player = move.getMovedPiece().getPlayer();
+        int x = move.getToX();
+        int y = move.getToY();
+
+        // replace pawn with chosen piece (use correct src)
+        switch (type.toLowerCase()) {
+            case "rook"  -> board.getSquare(x, y).setPiece(new Rook(player, player.getColor().equals("White") ? "/white_rook.png"  : "/black_rook.png"));
+            case "bishop"-> board.getSquare(x, y).setPiece(new Bishop(player, player.getColor().equals("White") ? "/white_bishop.png": "/black_bishop.png"));
+            case "knight"-> board.getSquare(x, y).setPiece(new Knight(player, player.getColor().equals("White") ? "/white_knight.png": "/black_knight.png"));
+            default -> board.getSquare(x, y).setPiece(new Queen(player, player.getColor().equals("White") ? "/white_queen.png" : "/black_queen.png"));
+        }
+
+        // UI updates after promotion
+        updatePieces();
+        updatePlayerPanels();
+        clearBlueHighlights();
+        selectedPiece = null;
+
+        // switch turn and clocks
+        game.switchTurn();
+        if (game.getClock() != null) game.getClock().switchTurn();
+
+        highlightKingCheck(game.getCurrentTurn());
+        if (board.isInCheck(game.getCurrentTurn()) && checkSound != null) checkSound.play();
+
+        // record promotion move in history (append promotion piece letter)
+        String base = move.getMoveNotation();
+        String promoSuffix = switch (type.toLowerCase()) {
+            case "rook" -> "=R";
+            case "bishop" -> "=B";
+            case "knight" -> "=N";
+            default -> "=Q";
+        };
+        game.addMoveToHistory(move);
+        updateMoveList();
+
+        // check for mate/stalemate
+        if (board.isCheckmate(game.getCurrentTurn())) {
+            Player winner = (game.getCurrentTurn() == game.getPlayers()[0]) ? game.getPlayers()[1] : game.getPlayers()[0];
+            showGameOverOverlay("Checkmate!\n" + winner.getColor() + " wins!");
+        } else if (board.isStalemate(game.getCurrentTurn())) {
+            showGameOverOverlay("Stalemate!\nDraw");
+        }
+    }
+
+    // ---------- MOVE NOTATION & MOVE LIST ----------
+    private void updateMoveList() {
+        moveListBox.getChildren().clear();
+        List<Move> history = List.copyOf(game.getMoveHistory());
+        for (int i = 0; i < history.size(); i++) {
+            String txt = history.get(i).getMoveNotation();
+            Label lbl = new Label((i + 1) + ". " + txt);
+            lbl.setStyle("-fx-font-size: 16px; -fx-text-fill: black;");
+            moveListBox.getChildren().add(lbl);
+        }
+    }
+
+    // ---------- PLAYER PANEL UPDATES (CAPTURED + MATERIAL) ----------
+    private void updatePlayerPanels() {
+        // compute scores
+        int whiteScore = 0;
+        int blackScore = 0;
+
+        // White captured: pieces that Black has taken (display on whiteCapturedRow)
+        List<Piece> capturedByWhite = new ArrayList<>(List.copyOf(game.getCapturedBlack()));
+        capturedByWhite.sort(Comparator.comparingInt(Piece::getValue).reversed());
+
+        whiteCapturedRow.getChildren().clear();
+        for (Piece p : capturedByWhite) {
+            ImageView iv = new ImageView(new Image(p.getSrc()));
+            iv.setFitWidth(squareSize * 0.4);
+            iv.setFitHeight(squareSize * 0.4);
+            whiteCapturedRow.getChildren().add(iv);
+            whiteScore += p.getValue();
+        }
+
+        // Black captured: pieces that White has taken (display on blackCapturedRow)
+        List<Piece> capturedByBlack = new ArrayList<>(List.copyOf(game.getCapturedWhite()));
+        capturedByBlack.sort(Comparator.comparingInt(Piece::getValue).reversed());
+
+        blackCapturedRow.getChildren().clear();
+        for (Piece p : capturedByBlack) {
+            ImageView iv = new ImageView(new Image(p.getSrc()));
+            iv.setFitWidth(squareSize * 0.4);
+            iv.setFitHeight(squareSize * 0.4);
+            blackCapturedRow.getChildren().add(iv);
+            blackScore += p.getValue();
+        }
+
+        // material difference: only show if positive, smaller text, no color
+        int diffBlack = blackScore - whiteScore;
+        int diffWhite = whiteScore - blackScore;
+
+        if (diffBlack > 0) {
+            blackMaterialLabel.setText("+" + diffBlack);
+            blackMaterialLabel.setStyle("-fx-font-size: 14px;");
+        } else {
+            blackMaterialLabel.setText("");
+        }
+
+        if (diffWhite > 0) {
+            whiteMaterialLabel.setText("+" + diffWhite);
+            whiteMaterialLabel.setStyle("-fx-font-size: 14px;");
+        } else {
+            whiteMaterialLabel.setText("");
+        }
+    }
+
+    private void onResign() {
+        Player loser = game.getCurrentTurn();
+        Player winner = (game.getPlayers()[0] == loser ? game.getPlayers()[1] : game.getPlayers()[0]);
+        showGameOverOverlay(winner.getColor() + " wins by resignation!");
+        endSound.play();
+    }
+
+    private void animateMove(
+            ImageView pieceView,
+            int fromRow, int fromCol,
+            int toRow, int toCol,
+            Runnable onFinished
+    ) {
+        StackPane fromSquare = getSquareNode(fromRow, fromCol);
+        StackPane toSquare = getSquareNode(toRow, toCol);
+
+        if (fromSquare == null || toSquare == null) {
+            onFinished.run();
+            return;
+        }
+
+        // Start- und Zielposition relativ zum Grid
+        Bounds start = fromSquare.localToScene(fromSquare.getBoundsInLocal());
+        Bounds end = toSquare.localToScene(toSquare.getBoundsInLocal());
+
+        double dx = end.getMinX() - start.getMinX();
+        double dy = end.getMinY() - start.getMinY();
+
+        TranslateTransition tt = new TranslateTransition(Duration.millis(180), pieceView);
+        tt.setByX(dx);
+        tt.setByY(dy);
+        tt.setInterpolator(Interpolator.EASE_OUT);
+
+        tt.setOnFinished(e -> {
+            pieceView.setTranslateX(0);
+            pieceView.setTranslateY(0);
+            onFinished.run();
+        });
+
+        tt.play();
+    }
+
+    private void undoLastMove() {
+        if (game.getMoveHistory().isEmpty()) return;
+
+        Move m = game.getMoveHistory().removeLast();
+
+        // Figuren zurücksetzen
+        Square from = game.getBoard().getSquare(m.getFromX(), m.getFromY());
+        Square to = game.getBoard().getSquare(m.getToX(), m.getToY());
+
+        if(m.isPromotion()){
+            to.setPiece(null);
+            Pawn p = new Pawn(game.getCurrentTurn(), "/" + game.getCurrentTurn().getColor().toLowerCase() + "_pawn.png");
+            from.setPiece(p);
+            p.setSquare(from);
+        } else {
+            to.setPiece(null);
+            from.setPiece(m.getMovedPiece());
+            m.getMovedPiece().setSquare(from);
+        }
+
+        // Capture rückgängig machen
+        if (m.getCapturedPiece() != null && !m.isEnPassant()) {
+            to.setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(to);
+        }
+
+        if(m.isEnPassant()){
+            game.getBoard().getSquare(to.getRow(), from.getCol()).setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(game.getBoard().getSquare(to.getRow(), from.getCol()));
+        }
+
+        if(m.isCastle()){
+            Piece r;
+            if(m.getToX() == 6){
+                r = game.getBoard().getSquare(5, m.getFromY()).getPiece();
+                r.setSquare(game.getBoard().getSquare(7, m.getFromY()));
+
+                game.getBoard().getSquare(5, m.getFromY()).setPiece(null);
+                game.getBoard().getSquare(7, m.getFromY()).setPiece(r);
+            } else {
+                r = game.getBoard().getSquare(3, m.getFromY()).getPiece();
+                r.setSquare(game.getBoard().getSquare(0, m.getFromY()));
+
+                game.getBoard().getSquare(3, m.getFromY()).setPiece(null);
+                game.getBoard().getSquare(0, m.getFromY()).setPiece(r);
+            }
+            r.setHasMoved(false);
+            m.getMovedPiece().setHasMoved(false);
+        }
+
+        // Zugrecht zurück
+        game.setCurrentTurn(game.getNotCurrentTurn());
+
+        // Uhr zurücksetzen / stoppen
+        game.getClock().switchTurn();
+
+        updatePieces();
     }
 }

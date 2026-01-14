@@ -7,6 +7,7 @@ public class SceneManager {
     private final Stage stage;
     private GameScreen gameScreen;
     private final MainMenu mainMenu;
+    private final RulesScreen rules;
     private final Game game;
     private final StartScreen startScreen;
 
@@ -20,6 +21,7 @@ public class SceneManager {
         gameScreen = new GameScreen(this);
         mainMenu = new MainMenu(this);
 
+        rules = new RulesScreen(this);
     }
 
     public void showStartScreen() {
@@ -29,6 +31,10 @@ public class SceneManager {
 
     public void showMainMenu() {
         mainMenu.show();
+    }
+
+    public void showRules(){
+        rules.show();
     }
 
     public void continueGame() {
@@ -42,12 +48,9 @@ public class SceneManager {
 
 
     public void startGame() {
-        System.out.println("SceneManager.startGame() using -> WHITE=" + whitePlayerName + " BLACK=" + blackPlayerName);
-
         game.startGame();
-        GameScreen gs = new GameScreen(this);
-        this.gameScreen = gs;
-        gs.show();
+        this.gameScreen = new GameScreen(this);
+        gameScreen.show();
     }
 
     public void exitGame() {
@@ -65,9 +68,8 @@ public class SceneManager {
 
     public void restartGame() {
         game.restartGame();
-        GameScreen gs = new GameScreen(this);
-        this.gameScreen = gs;
-        gs.show();
+        this.gameScreen = new GameScreen(this);
+        gameScreen.show();
     }
     // Restart = zurück zum StartScreen (Spieler neu bestimmen)
     public void restartToStartScreen() {

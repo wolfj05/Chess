@@ -47,7 +47,17 @@ public class Square {
     }
 
     public void setPiece(Piece p) {
+        // Falls vorher eine Figur hier stand: Square-Referenz löschen
+        if (this.p != null && this.p.getSquare() == this) {
+            this.p.setSquare(null);
+        }
+
         this.p = p;
+
+        // Falls neue Figur: Square zuweisen
+        if (p != null && p.getSquare() != this) {
+            p.setSquare(this);
+        }
     }
 
     public boolean isValidMove() {

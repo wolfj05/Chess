@@ -10,12 +10,12 @@ import javafx.scene.image.ImageView;
 import java.util.List;
 
 public abstract class Piece {
-    Player player;
-    Square square;
-    boolean movable;
-    String src;
-    boolean hasMoved;
-    ImageView imageView;
+    private Player player;
+    private Square square;
+    private boolean movable;
+    private String src;
+    private boolean hasMoved;
+    private ImageView imageView;
 
     public Piece(Player player, String src) {
         this.player = player;
@@ -40,16 +40,20 @@ public abstract class Piece {
         return imageView;
     }
 
-    public boolean isMovable() {
-        return movable;
-    }
-
     public String getSrc() {
         return src;
     }
 
     public void setSquare(Square square) {
         this.square = square;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
     }
 
     public void setHasMoved(boolean hasMoved) {
@@ -62,4 +66,13 @@ public abstract class Piece {
 
     public abstract List<Move> calcValidMoves(Board board, int x, int y); //CALC ist btw Slang für Calculate
 
+    public int getValue() {
+        return switch (this.getClass().getSimpleName()) {
+            case "Pawn" -> 1;
+            case "Knight", "Bishop" -> 3;
+            case "Rook" -> 5;
+            case "Queen" -> 9;
+            default -> 0; // König
+        };
+    }
 }

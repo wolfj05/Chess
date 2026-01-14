@@ -40,7 +40,7 @@ public class Bishop extends Piece{
                     ));
                 } else {
                     // capture
-                    if (target.player != this.player) {
+                    if (target.getPlayer() != this.getPlayer()) {
                         moves.add(new Move(
                                 x, y, nx, ny,
                                 this, target,

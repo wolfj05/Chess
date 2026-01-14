@@ -4,9 +4,14 @@ import at.ac.hcw.chess.gameutils.Game;
 import at.ac.hcw.chess.scenes.SceneManager;
 import javafx.application.Application;
 import javafx.scene.image.Image;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.InputStream;
+
+import java.util.Objects;
 
 public class Main extends Application {
 

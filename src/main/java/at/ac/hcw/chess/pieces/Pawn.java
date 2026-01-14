@@ -16,9 +16,9 @@ public class Pawn extends Piece{
     public List<Move> calcValidMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
 
-        int dir = (player.getColor().equals("White")) ? 1 : -1;
-        int startRow = (player.getColor().equals("White")) ? 1 : 6;
-        int promotionRow = (player.getColor().equals("White")) ? 7 : 0;
+        int dir = (getPlayer().getColor().equals("White")) ? 1 : -1;
+        int startRow = (getPlayer().getColor().equals("White")) ? 1 : 6;
+        int promotionRow = (getPlayer().getColor().equals("White")) ? 7 : 0;
 
         // 1-square forward
         int ny = y + dir;
@@ -66,7 +66,13 @@ public class Pawn extends Piece{
             }
         }
 
-        Move last = board.getLastMove();
+        //En-Passant
+        Move last = null;
+        List<Move> history = board.getGame().getMoveHistory();
+        if(!history.isEmpty()){
+            last = history.getLast();
+        }
+
         if (last != null && last.isDoublePawnPush()) {
 
             Piece lp = last.getMovedPiece();
@@ -83,7 +89,6 @@ public class Pawn extends Piece{
                     if (board.isInside(enemyX, targetY) && board.getPiece(enemyX, targetY) == null) {
 
                         Move enPassantMove = new Move(x, y, enemyX, targetY, this, lp, false, null, false, true, false);
-                        enPassantMove.setEnPassant(true);
                         moves.add(enPassantMove);
                     }
                 }

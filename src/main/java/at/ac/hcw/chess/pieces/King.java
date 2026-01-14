@@ -31,7 +31,7 @@ public class King extends Piece{
 
             Piece target = board.getPiece(nx, ny);
 
-            if (target == null || target.player != this.player) {
+            if (target == null || target.getPlayer() != this.getPlayer()) {
                 moves.add(new Move(
                         x, y, nx, ny,
                         this, target,
@@ -42,10 +42,10 @@ public class King extends Piece{
         }
 
         // castling (vereinfachte Version)
-        if (!hasMoved) {
+        if (!hasMoved()) {
             // king side
             Piece rook = board.getPiece(7, y);
-            if (rook instanceof Rook && !((Rook) rook).hasMoved) {
+            if (rook instanceof Rook && !((Rook) rook).hasMoved()) {
                 if (board.getPiece(5, y) == null && board.getPiece(6, y) == null) {
                     moves.add(new Move(
                             x, y, 6, y,
@@ -57,7 +57,7 @@ public class King extends Piece{
             }
             // queen side
             rook = board.getPiece(0, y);
-            if (rook instanceof Rook && !((Rook) rook).hasMoved) {
+            if (rook instanceof Rook && !((Rook) rook).hasMoved()) {
                 if (board.getPiece(1, y) == null &&
                         board.getPiece(2, y) == null &&
                         board.getPiece(3, y) == null) {

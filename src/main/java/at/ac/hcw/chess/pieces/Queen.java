@@ -39,7 +39,7 @@ public class Queen extends Piece{
                     moves.add(new Move(x, y, r, c, this, null,
                             false, null, false, false, false));
                 } else {
-                    if (board.getSquare(r, c).getPiece().getPlayer() != this.player)
+                    if (board.getSquare(r, c).getPiece().getPlayer() != this.getPlayer())
                         moves.add(new Move(x, y, r, c, this, board.getSquare(r, c).getPiece(),
                                 false, null, false, false, false));
                     break; // Blockiert
@@ -64,7 +64,7 @@ public class Queen extends Piece{
                     moves.add(new Move(x, y, r, c, this, null,
                             false, null, false, false, false));
                 } else {
-                    if (board.getSquare(r, c).getPiece().getPlayer() != this.player)
+                    if (board.getSquare(r, c).getPiece().getPlayer() != this.getPlayer())
                         moves.add(new Move(x, y, r, c, this, board.getSquare(r, c).getPiece(),
                                 false, null, false, false, false));
                     break;
