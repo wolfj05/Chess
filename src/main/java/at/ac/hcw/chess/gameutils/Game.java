@@ -1,17 +1,16 @@
 package at.ac.hcw.chess.gameutils;
 
+import at.ac.hcw.chess.pieces.Pawn;
 import at.ac.hcw.chess.pieces.Piece;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Game {
-    Board board;
-    Player[] players = new Player[2];
+    private Board board;
+    private Player[] players = new Player[2];
     private Player currentTurn;
-    List<Move> moveHistory = new ArrayList<>();
+    private List<Move> moveHistory = new ArrayList<>();
     private final List<Piece> capturedWhite = new ArrayList<>();
     private final List<Piece> capturedBlack = new ArrayList<>();
     private Clock clock;
@@ -105,5 +104,62 @@ public class Game {
             if (!capturedBlack.contains(p))
                 capturedBlack.add(p);
         }
+    }
+
+    public void undoLastMove() {
+        if (moveHistory.isEmpty()) return;
+
+        Move m = moveHistory.removeLast();
+
+        // Figuren zurücksetzen
+        Square from = board.getSquare(m.getFromX(), m.getFromY());
+        Square to = board.getSquare(m.getToX(), m.getToY());
+
+        if(m.isPromotion()){
+            to.setPiece(null);
+            Pawn p = new Pawn(getCurrentTurn(), "/" + getCurrentTurn().getColor().toLowerCase() + "_pawn.png");
+            from.setPiece(p);
+            p.setSquare(from);
+        } else {
+            to.setPiece(null);
+            from.setPiece(m.getMovedPiece());
+            m.getMovedPiece().setSquare(from);
+        }
+
+        // Capture rückgängig machen
+        if (m.getCapturedPiece() != null && !m.isEnPassant()) {
+            to.setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(to);
+        }
+
+        if(m.isEnPassant()){
+            board.getSquare(to.getRow(), from.getCol()).setPiece(m.getCapturedPiece());
+            m.getCapturedPiece().setSquare(board.getSquare(to.getRow(), from.getCol()));
+        }
+
+        if(m.isCastle()){
+            Piece r;
+            if(m.getToX() == 6){
+                r = board.getSquare(5, m.getFromY()).getPiece();
+                r.setSquare(board.getSquare(7, m.getFromY()));
+
+                board.getSquare(5, m.getFromY()).setPiece(null);
+                board.getSquare(7, m.getFromY()).setPiece(r);
+            } else {
+                r = board.getSquare(3, m.getFromY()).getPiece();
+                r.setSquare(board.getSquare(0, m.getFromY()));
+
+                board.getSquare(3, m.getFromY()).setPiece(null);
+                board.getSquare(0, m.getFromY()).setPiece(r);
+            }
+            r.setHasMoved(false);
+            m.getMovedPiece().setHasMoved(false);
+        }
+
+        // Zugrecht zurück
+        setCurrentTurn(getNotCurrentTurn());
+
+        // Uhr zurücksetzen / stoppen
+        clock.switchTurn();
     }
 }

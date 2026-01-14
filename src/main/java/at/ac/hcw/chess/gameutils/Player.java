@@ -5,9 +5,9 @@ import at.ac.hcw.chess.pieces.*;
 import java.util.Objects;
 
 public class Player {
-    String color;
-    Piece[] pieces = new Piece[16];
-    String avatarSrc;
+    private String color;
+    private Piece[] pieces = new Piece[16];
+    private String avatarSrc;
 
     public Player(String color, String avatarSrc) {
         this.color = color;

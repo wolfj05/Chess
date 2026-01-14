@@ -44,7 +44,7 @@ public class GameScreen {
     private Label blackClockLabel;
     private Label whiteClockLabel;
 
-    // CAPTURED PIECES (30% overlap)
+    // CAPTURED PIECES
     private HBox blackCapturedRow;
     private HBox whiteCapturedRow;
 
@@ -134,7 +134,7 @@ public class GameScreen {
             });
         });
 
-        // SIDE PANEL LEFT (25% WIDTH)
+        // Left Panel (22% WIDTH)
         leftPanel = new BorderPane();
         leftPanel.setPadding(new Insets(20));
         leftPanel.prefWidthProperty().bind(sceneManager.getStage().widthProperty().multiply(0.22));
@@ -159,7 +159,6 @@ public class GameScreen {
         moveListPane.setPadding(new Insets(20));
         moveListPane.setStyle("-fx-background-color: rgba(40,40,40,0.45); -fx-background-radius: 20;");
 
-        // MAIN LAYOUT
         HBox layout = new HBox(30, leftPanel, gameView, moveListPane);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-background-color: linear-gradient(to bottom, #c7a784, #8e735b);");
@@ -167,7 +166,6 @@ public class GameScreen {
         scene = new Scene(new StackPane(layout));
         sceneManager.getStage().setScene(scene);
 
-        // CLOCK SETUP
         game.setClock(new Clock(10 * 60 * 1000));
         game.getClock().start();
         startClockUpdater();
@@ -175,7 +173,7 @@ public class GameScreen {
 
     private void buildLeftPanelContent() {
 
-        //──────────── BLACK PLAYER ────────────
+        //Black
         HBox blackHeader = new HBox();
         blackHeader.setAlignment(Pos.CENTER_LEFT);
 
@@ -207,10 +205,10 @@ public class GameScreen {
 
         VBox blackSection = new VBox(8, blackHeader, blackCapturedRow, blackMaterialLabel);
         
-        //──────────── MENU BUTTONS ────────────
+        //Menu
         VBox menuBox = getMenuButtons();
 
-        //──────────── WHITE PLAYER ────────────
+        // White
         HBox whiteHeader = new HBox();
         whiteHeader.setAlignment(Pos.CENTER_LEFT);
 
@@ -252,7 +250,7 @@ public class GameScreen {
 
     private VBox getMenuButtons() {
         Button undo = new Button("Undo");
-        undo.setOnAction(e -> undoLastMove());
+        undo.setOnAction(e -> {game.undoLastMove(); updatePieces();});
 
         Button restart = new Button("Restart");
         restart.setOnAction(e -> sceneManager.restartGame());
@@ -318,7 +316,6 @@ public class GameScreen {
         whiteCapturedRow.setSpacing(overlap);
     }
 
-    // ---------- INPUT HANDLING ----------
     private void onSquareClick(int x, int y) {
         Square square = game.getBoard().getSquare(x, y);
         Piece piece = square.getPiece();

@@ -28,9 +28,8 @@ public class SceneManager {
 
     public void startGame() {
         game.startGame();
-        GameScreen gs = new GameScreen(this);
-        this.gameScreen = gs;
-        gs.show();
+        this.gameScreen = new GameScreen(this);
+        gameScreen.show();
     }
 
     public void exitGame(){
@@ -48,8 +47,7 @@ public class SceneManager {
 
     public void restartGame(){
         game.restartGame();
-        GameScreen gs = new GameScreen(this);
-        this.gameScreen = gs;
-        gs.show();
+        this.gameScreen = new GameScreen(this);
+        gameScreen.show();
     }
 }

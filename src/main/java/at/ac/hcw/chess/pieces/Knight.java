@@ -29,7 +29,7 @@ public class Knight extends Piece{
 
             Piece target = board.getPiece(nx, ny);
 
-            if (target == null || target.player != this.player) {
+            if (target == null || target.getPlayer() != this.getPlayer()) {
                 moves.add(new Move(
                         x, y, nx, ny,
                         this, target,

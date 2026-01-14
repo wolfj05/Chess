@@ -16,9 +16,9 @@ public class Pawn extends Piece{
     public List<Move> calcValidMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
 
-        int dir = (player.getColor().equals("White")) ? 1 : -1;
-        int startRow = (player.getColor().equals("White")) ? 1 : 6;
-        int promotionRow = (player.getColor().equals("White")) ? 7 : 0;
+        int dir = (getPlayer().getColor().equals("White")) ? 1 : -1;
+        int startRow = (getPlayer().getColor().equals("White")) ? 1 : 6;
+        int promotionRow = (getPlayer().getColor().equals("White")) ? 7 : 0;
 
         // 1-square forward
         int ny = y + dir;

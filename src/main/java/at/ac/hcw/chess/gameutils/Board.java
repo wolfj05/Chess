@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Board {
-    Square[][] board = new Square[8][8];
-    Player[] players;
+    private Square[][] board = new Square[8][8];
+    private Player[] players;
     private Move lastMove;
-    Game game;
+    private Game game;
     boolean isSimulation;
     private final Map<String, Integer> positionCount = new HashMap<>();
     private int halfMoveClock = 0;
