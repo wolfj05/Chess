@@ -48,19 +48,31 @@ public class Clock {
         };
     }
 
+    /**
+     * start clock
+     */
     public void start() {
         lastUpdate = 0;
         timer.start();
     }
 
+    /**
+     * stop clock
+     */
     public void stop() {
         timer.stop();
     }
 
+    /**
+     * toggle turn
+     */
     public void switchTurn() {
         runningWhite = !runningWhite;
     }
 
+    /**
+     * reset whole clock (both timers)
+     */
     public void reset() {
         // 1) Timer stoppen
         timer.stop();
@@ -76,14 +88,24 @@ public class Clock {
         lastUpdate = 0;
     }
 
+    /** 
+     * @return white time
+     */
     public long getWhiteTime() {
         return whiteTime;
     }
 
+    /** 
+     * @return black time
+     */
     public long getBlackTime() {
         return blackTime;
     }
 
+    /** 
+     * @param ms time
+     * @return formatted String of the time
+     */
     public String format(long ms) {
         long totalSec = ms / 1000;
         long min = totalSec / 60;

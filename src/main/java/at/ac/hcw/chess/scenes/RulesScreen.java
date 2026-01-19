@@ -19,6 +19,9 @@ public class RulesScreen {
         createScene();
     }
 
+    /**
+     * Create the Scene
+     */
     private void createScene() {
 
         // ---------- TITLE ----------
@@ -96,6 +99,12 @@ public class RulesScreen {
         scene = new Scene(root);
     }
 
+    /** 
+     * Formatting for the rule box
+     * @param rulesBox rule box
+     * @param title title
+     * @return VBox
+     */
     private VBox getRules(VBox rulesBox, Label title) {
         ScrollPane scrollPane = new ScrollPane(rulesBox);
         scrollPane.setFitToWidth(true);
@@ -122,6 +131,12 @@ public class RulesScreen {
         return layout;
     }
 
+    /** 
+     * Formatting of one rule
+     * @param title Title
+     * @param text Text
+     * @return VBox
+     */
     private VBox rule(String title, String text) {
         Label t = new Label(title);
         t.setStyle("""
@@ -140,6 +155,9 @@ public class RulesScreen {
         return new VBox(6, t, body);
     }
 
+    /**
+     * show method
+     */
     public void show() {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setTitle("Chess Rules");

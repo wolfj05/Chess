@@ -40,22 +40,42 @@ public class Player {
         }
     }
 
+    /** 
+     * get current color
+     * @return String
+     */
     public String getColor() {
         return color;
     }
 
+    /** 
+     * get all pieces
+     * @return Pieces
+     */
     public Piece[] getPieces() {
         return pieces;
     }
 
+    /** 
+     * set all pieces
+     * @param pieces
+     */
     public void setPieces(Piece[] pieces) {
         this.pieces = pieces;
     }
 
+    /** 
+     * get avatar source
+     * @return String
+     */
     public String getAvatarSrc() {
         return avatarSrc;
     }
 
+    /** 
+     * set avatar source
+     * @param avatarSrc
+     */
     public void setAvatarSrc(String avatarSrc) {
         this.avatarSrc = avatarSrc;
     }

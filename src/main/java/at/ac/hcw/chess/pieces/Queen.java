@@ -16,6 +16,13 @@ public class Queen extends Piece{
         super(player, "/" + (player.getColor().equals("White") ? "white_queen.png" : "black_queen.png"));
     }
 
+    /**
+     * function to calculate all possible moves a queen can make
+     * @param board current board
+     * @param x coordinate
+     * @param y coordinate
+     * @return list of all possible moves
+     */
     @Override
     public List<Move> calcValidMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
@@ -26,6 +33,13 @@ public class Queen extends Piece{
         return moves;
     }
 
+    /**
+     * function to calculate all possible moves a rook can make
+     * @param board current board
+     * @param x coordinate
+     * @param y coordinate
+     * @return list of all possible moves
+     */
     private List<Move> calcRookMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
         int[] dRow = {-1, 1, 0, 0};
@@ -51,6 +65,13 @@ public class Queen extends Piece{
         return moves;
     }
 
+    /**
+     * function to calculate all possible moves a bishop can make
+     * @param board current board
+     * @param x coordinate
+     * @param y coordinate
+     * @return list of all possible moves
+     */
     private List<Move> calcBishopMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();
         int[] dRow = {-1, -1, 1, 1};

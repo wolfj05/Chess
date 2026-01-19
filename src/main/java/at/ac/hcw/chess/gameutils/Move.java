@@ -42,9 +42,9 @@ public class Move {
         this.isDoublePawnPush = isDoublePawnPush;
     }
 
-    // ─────────────────────────────────────────────
-    // ⬇ Getter
-    // ─────────────────────────────────────────────
+    /**
+     * Getters and Checks
+     */
     public int getFromX() { return fromX; }
     public int getFromY() { return fromY; }
     public int getToX() { return toX; }
@@ -60,14 +60,26 @@ public class Move {
     public boolean isEnPassant() { return isEnPassant; }
     public boolean isDoublePawnPush() { return isDoublePawnPush; }
 
+    /** 
+     * set if it is en passant
+     * @param v boolean
+     */
     public void setEnPassant(boolean v){
         this.isEnPassant = v;
     }
 
+    /** 
+     * set if it is double pawn push
+     * @param doublePawnPush
+     */
     public void setDoublePawnPush(boolean doublePawnPush) {
         isDoublePawnPush = doublePawnPush;
     }
 
+    /** 
+     * to string method
+     * @return String
+     */
     @Override
     public String toString() {
         return movedPiece.getClass().getSimpleName() +
@@ -79,6 +91,10 @@ public class Move {
                 (isDoublePawnPush ? " double pawn push" : "");
     }
 
+    /** 
+     * get the move notation for the history
+     * @return String
+     */
     public String getMoveNotation() {
         char file = (char) ('a' + this.getToX());
         int rank = this.getToY() + 1;

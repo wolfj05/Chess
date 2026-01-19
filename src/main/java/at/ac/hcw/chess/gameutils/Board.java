@@ -60,36 +60,67 @@ public class Board {
         }
     }
 
+    /** 
+     * @return current board
+     */
     public Square[][] getBoard() {
         return board;
     }
 
+    /** 
+     * @param row coordinate
+     * @param col coordinate
+     * @return Square on current board at x,y
+     */
     public Square getSquare(int row, int col){
         if (row < 0 || row >= 8 || col < 0 || col >= 8) return null;
         return board[row][col];
     }
 
+    /** 
+     * @param x coordinate
+     * @param y coordinate
+     * @return coordinates inside board
+     */
     public boolean isInside(int x, int y) {
         return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 
+    /** 
+     * @param x coordinate
+     * @param y coordinate
+     * @return Piece on current board at x,y
+     */
     public Piece getPiece(int x, int y) {
         Square sq = getSquare(x, y);
         return sq != null ? sq.getPiece() : null;
     }
 
+    /** 
+     * @return current Game
+     */
     public Game getGame() {
         return game;
     }
 
+    /** 
+     * @return last Move
+     */
     public Move getLastMove() {
         return lastMove;
     }
 
+    /** 
+     * @return is simulated board
+     */
     public boolean isSimulation() {
         return isSimulation;
     }
 
+    /** 
+     * make a move on the current board. check for special cases
+     * @param move the move from x,y to another x,y
+     */
     public void makeMove(Move move) {
         int x1 = move.getFromX();
         int y1 = move.getFromY();
@@ -174,6 +205,10 @@ public class Board {
         }
     }
 
+    /** 
+     * @param p Piece
+     * @return Piece that was copied
+     */
     private Piece cloneForCapturedList(Piece p) {
         if (p == null) return null;
         // kopiere nur Typ, player, src
@@ -186,10 +221,20 @@ public class Board {
         return null;
     }
 
+    /** 
+     * @param row coordinate
+     * @param col coordinate
+     * @return if is inside current board
+     */
     public boolean isValid(int row, int col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
 
+    /** 
+     * Check if player is in check
+     * @param player Player whose turn it is
+     * @return boolean
+     */
     public boolean isInCheck(Player player) {
         Square kingSquare = findKing(player);
         if (kingSquare == null) return false; // sollte nie passieren
@@ -212,6 +257,11 @@ public class Board {
         return false;
     }
 
+    /** 
+     * Check if current player is checkmated
+     * @param player Player whose turn it is
+     * @return boolean
+     */
     public boolean isCheckmate(Player player) {
         if (!isInCheck(player)) return false;
 
@@ -234,6 +284,11 @@ public class Board {
         return true; // keine legalen Züge → Schachmatt
     }
 
+    /** 
+     * find King piece of currrent player
+     * @param player
+     * @return Square
+     */
     public Square findKing(Player player) {
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
@@ -245,6 +300,10 @@ public class Board {
         return null;
     }
 
+    /** 
+     * Make a copy of the current board
+     * @return Board
+     */
     public Board deepCopy() {
         Board copy = new Board(players, true, this.game);
         copy.lastMove = this.lastMove;
@@ -265,6 +324,11 @@ public class Board {
         return copy;
     }
 
+    /** 
+     * make a copy of a Piece
+     * @param p Piece to make a copy of
+     * @return Piece
+     */
     private static Piece getNewPiece(Piece p) {
         Piece newPiece = null;
         switch (p) {
@@ -282,6 +346,11 @@ public class Board {
         return newPiece;
     }
 
+    /** 
+     * Check if its a stalemate
+     * @param player current Player
+     * @return boolean
+     */
     public boolean isStalemate(Player player) {
         if (isInCheck(player)) return false; // Spieler steht nicht im Schach
 
@@ -303,6 +372,11 @@ public class Board {
         return true; // keine legalen Züge und nicht im Schach → Patt
     }
 
+    /** 
+     * get position key
+     * @param turn current player
+     * @return String
+     */
     public String getPositionKey(Player turn) {
         StringBuilder sb = new StringBuilder();
         sb.append(turn.getColor()).append("|");
@@ -316,14 +390,26 @@ public class Board {
         return sb.toString();
     }
 
+    /** 
+     * check for threefold repetition
+     * @return boolean
+     */
     public boolean isThreefoldRepetition() {
         return positionCount.values().stream().anyMatch(v -> v >= 3);
     }
 
+    /** 
+     * check for fifty move rule
+     * @return boolean
+     */
     public boolean isFiftyMoveRule() {
         return halfMoveClock >= 100; // 100 Halbzüge
     }
 
+    /** 
+     * check if there is insufficient material 
+     * @return boolean
+     */
     public boolean hasInsufficientMaterial() {
         List<Piece> white = new ArrayList<>();
         List<Piece> black = new ArrayList<>();

@@ -17,6 +17,9 @@ public class PauseScreen {
         createScene();
     }
 
+    /**
+     * Create the Scene
+     */
     private void createScene() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("pause.fxml"));
@@ -46,6 +49,9 @@ public class PauseScreen {
         }
     }
 
+    /**
+     * show method
+     */
     public void show() {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setFullScreenExitHint("");
