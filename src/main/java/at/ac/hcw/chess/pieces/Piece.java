@@ -28,44 +28,86 @@ public abstract class Piece {
         hasMoved = false;
     }
 
+    /** 
+     * @return current Player
+     */
     public Player getPlayer() {
         return player;
     }
 
+    /** 
+     * @return current Square
+     */
     public Square getSquare() {
         return square;
     }
 
+    /** 
+     * @return ImageView
+     */
     public ImageView getImageView() {
         return imageView;
     }
 
+    /** 
+     * @return source for image
+     */
     public String getSrc() {
         return src;
     }
 
+    /** 
+     * set square
+     * @param square
+     */
     public void setSquare(Square square) {
         this.square = square;
     }
 
+    /** 
+     * set player
+     * @param player
+     */
     public void setPlayer(Player player) {
         this.player = player;
     }
 
+    /** 
+     * @return if piece has moved
+     */
     public boolean hasMoved() {
         return hasMoved;
     }
 
+    /** 
+     * set wether piece has moved
+     * @param hasMoved
+     */
     public void setHasMoved(boolean hasMoved) {
         this.hasMoved = hasMoved;
     }
 
+    /** 
+     * set the imageview
+     * @param imageView
+     */
     public void setImageView(ImageView imageView) {
         this.imageView = imageView;
     }
 
+    /**
+     * function to calculate all possible moves a piece can make
+     * @param board current board
+     * @param x coordinate
+     * @param y coordinate
+     * @return list of all possible moves
+     */
     public abstract List<Move> calcValidMoves(Board board, int x, int y); //CALC ist btw Slang für Calculate
 
+    /** 
+     * get a value based on which type of piece it is
+     * @return int
+     */
     public int getValue() {
         return switch (this.getClass().getSimpleName()) {
             case "Pawn" -> 1;

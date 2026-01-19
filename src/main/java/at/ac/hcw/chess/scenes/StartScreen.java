@@ -25,6 +25,9 @@ public class StartScreen {
         createScene();
     }
 
+    /**
+     * Create the Scene
+     */
     private void createScene() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("start_screen.fxml"));
@@ -152,6 +155,10 @@ public class StartScreen {
         }
     }
 
+    /** 
+     * Create an alert with a message
+     * @param msg Message
+     */
     private void showAlert(String msg) {
         Alert a = new Alert(Alert.AlertType.WARNING);
         a.setHeaderText(null);
@@ -159,6 +166,9 @@ public class StartScreen {
         a.showAndWait();
     }
 
+    /**
+     * show method
+     */
     public void show() {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setFullScreenExitHint("");

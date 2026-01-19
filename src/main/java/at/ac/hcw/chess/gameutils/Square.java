@@ -26,26 +26,47 @@ public class Square {
         this.col = col;
     }
 
+    /** 
+     * @return row
+     */
     public int getRow() {
         return row;
     }
 
+    /** 
+     * set row
+     * @param row
+     */
     public void setRow(int row) {
         this.row = row;
     }
 
+    /** 
+     * @return column
+     */
     public int getCol() {
         return col;
     }
 
+    /** 
+     * set column
+     * @param col
+     */
     public void setCol(int col) {
         this.col = col;
     }
 
+    /** 
+     * @return Piece
+     */
     public Piece getPiece() {
         return p;
     }
 
+    /** 
+     * set piece
+     * @param p Piece
+     */
     public void setPiece(Piece p) {
         // Falls vorher eine Figur hier stand: Square-Referenz löschen
         if (this.p != null && this.p.getSquare() == this) {
@@ -60,10 +81,17 @@ public class Square {
         }
     }
 
+    /** 
+     * @return if move is valid
+     */
     public boolean isValidMove() {
         return isValidMove;
     }
 
+    /** 
+     * set if move is valid
+     * @param validMove
+     */
     public void setValidMove(boolean validMove) {
         isValidMove = validMove;
     }

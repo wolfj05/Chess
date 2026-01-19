@@ -79,6 +79,9 @@ public class GameScreen {
         createScene();
     }
 
+    /**
+     * Create the Scene
+     */
     private void createScene() {
         // LOAD SOUNDS
         moveSound    = new AudioClip(Objects.requireNonNull(getClass().getResource("/move.wav")).toString());
@@ -176,6 +179,9 @@ public class GameScreen {
         startClockUpdater();
     }
 
+    /**
+     * Build the left Panel (Player names, clock timers, captured pieces and menu buttons)
+     */
     private void buildLeftPanelContent() {
 
         //Black
@@ -253,6 +259,9 @@ public class GameScreen {
 
     }
 
+    /** 
+     * @return all the menu buttons for the left panel
+     */
     private VBox getMenuButtons() {
         Button undo = new Button("Undo");
         undo.setOnAction(e -> {game.undoLastMove(); updatePieces();});
@@ -272,6 +281,9 @@ public class GameScreen {
         return menuBox;
     }
 
+    /** 
+     * @return menu button styling 
+     */
     private String btn() {
         return """
             -fx-background-color: #5b4636;
@@ -282,6 +294,9 @@ public class GameScreen {
         """;
     }
 
+    /**
+     * Remove old pieces and place the pieces on their new positions
+     */
     private void updatePieces() {
         // Remove old piece images
         if (squareGrid == null) return;
@@ -316,6 +331,11 @@ public class GameScreen {
         whiteCapturedRow.setSpacing(overlap);
     }
 
+    /** 
+     * Funtion to execute an action if a square was clicked
+     * @param x coordinate
+     * @param y coordinate
+     */
     private void onSquareClick(int x, int y) {
         Square square = game.getBoard().getSquare(x, y);
         Piece piece = square.getPiece();
@@ -391,6 +411,10 @@ public class GameScreen {
         }
     }
 
+    /** 
+     * Select a piece after it got clicked and visualize possible moves
+     * @param piece
+     */
     private void selectPiece(Piece piece) {
         if (piece == null || piece.getSquare() == null) return;
         selectedPiece = piece;
@@ -410,6 +434,9 @@ public class GameScreen {
         highlightKingCheck(game.getCurrentTurn());
     }
 
+    /**
+     * visualize possible moves for selected piece
+     */
     private void highlightLegalMoves() {
         clearBlueHighlights();
         for (Move mv : List.copyOf(legalMovesForSelected)) {
@@ -427,6 +454,10 @@ public class GameScreen {
         }
     }
 
+    /** 
+     * highlight if a king is in check of a player
+     * @param player the current Player
+     */
     private void highlightKingCheck(Player player) {
         // clear previous
         if (redKingSquare != null) {
@@ -446,6 +477,9 @@ public class GameScreen {
         }
     }
 
+    /**
+     * clear the visualizing of possible moves
+     */
     private void clearBlueHighlights() {
         for (StackPane s : List.copyOf(blueHighlights)) {
             s.getChildren().removeIf(n -> n instanceof javafx.scene.shape.Circle);
@@ -453,6 +487,12 @@ public class GameScreen {
         blueHighlights.clear();
     }
 
+    /** 
+     * find the stackpane of a square at x,y
+     * @param x coordinate
+     * @param y coordinate
+     * @return StackPane
+     */
     private StackPane getSquareNode(int x, int y) {
         for (Node n : squareGrid.getChildren()) {
             Integer col = GridPane.getColumnIndex(n);
@@ -463,7 +503,9 @@ public class GameScreen {
         return null;
     }
 
-    // ---------- WINDOW / SCENE ----------
+    /**
+     * show method
+     */
     public void show() {
         sceneManager.getStage().setScene(scene);
         sceneManager.getStage().setFullScreenExitHint("");
@@ -473,6 +515,10 @@ public class GameScreen {
         sceneManager.getStage().setTitle("Chess");
     }
 
+    /** 
+     * visualize Overlay after game has concluded
+     * @param message Message
+     */
     private void showGameOverOverlay(String message) {
         if (gameOverOverlay != null) return;
         if (game.getClock() != null) game.getClock().stop();
@@ -500,6 +546,9 @@ public class GameScreen {
         root.getChildren().add(gameOverOverlay);
     }
 
+    /**
+     * hide Overlay of concluded game
+     */
     private void hideGameOverOverlay() {
         if (gameOverOverlay != null) {
             StackPane root = (StackPane) scene.getRoot();
@@ -533,7 +582,11 @@ public class GameScreen {
         t.start();
     }
 
-    // ---------- PROMOTION UI ----------
+    /** 
+     * Show Promotion UI
+     * @param pawn Pawn to be promoted
+     * @param move last Move
+     */
     private void showPromotionPopup(Piece pawn, Move move) {
         if (pawn == null || move == null) return;
 
@@ -594,6 +647,11 @@ public class GameScreen {
         root.getChildren().add(overlay);
     }
 
+    /** 
+     * finish the promotion process, after promotion target was chosen
+     * @param move last Move
+     * @param type promotion target
+     */
     private void finishPromotion(Move move, String type) {
         if (move == null || type == null) return;
 
@@ -646,7 +704,9 @@ public class GameScreen {
         }
     }
 
-    // ---------- MOVE NOTATION & MOVE LIST ----------
+    /**
+     * list of all past moves
+     */
     private void updateMoveList() {
         moveListBox.getChildren().clear();
         List<Move> history = List.copyOf(game.getMoveHistory());
@@ -658,7 +718,9 @@ public class GameScreen {
         }
     }
 
-    // ---------- PLAYER PANEL UPDATES (CAPTURED + MATERIAL) ----------
+    /**
+     * update player panels (captured + material)
+     */
     private void updatePlayerPanels() {
         // compute scores
         int whiteScore = 0;
@@ -709,6 +771,9 @@ public class GameScreen {
         }
     }
 
+    /**
+     * Handles a players resignation
+     */
     private void onResign() {
         Player loser = game.getCurrentTurn();
         Player winner = (game.getPlayers()[0] == loser ? game.getPlayers()[1] : game.getPlayers()[0]);
@@ -718,6 +783,15 @@ public class GameScreen {
         }
     }
 
+    /** 
+     * Animate the move of moving a piece
+     * @param pieceView piece image
+     * @param fromRow "from" - y coordinate
+     * @param fromCol "from" - x coordinate
+     * @param toRow "to" - y coordinate
+     * @param toCol "to" - x coordinate
+     * @param onFinished function that is the cause for an animation
+     */
     private void animateMove(
             ImageView pieceView,
             int fromRow, int fromCol,
@@ -753,6 +827,9 @@ public class GameScreen {
         tt.play();
     }
 
+    /**
+     * Undo the last move
+     */
     private void undoLastMove() {
         if (game.getMoveHistory().isEmpty()) return;
 

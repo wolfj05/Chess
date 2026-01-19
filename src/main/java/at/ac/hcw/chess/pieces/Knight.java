@@ -12,6 +12,13 @@ public class Knight extends Piece{
         super(player, src);
     }
 
+    /**
+     * function to calculate all possible moves a knight can make
+     * @param board current board
+     * @param x coordinate
+     * @param y coordinate
+     * @return list of all possible moves
+     */
     @Override
     public List<Move> calcValidMoves(Board board, int x, int y) {
         List<Move> moves = new ArrayList<>();

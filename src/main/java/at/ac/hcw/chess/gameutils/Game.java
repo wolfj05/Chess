@@ -29,39 +29,66 @@ public class Game {
         this.board = new Board(this.players, false, this);
     }
 
+    /** 
+     * @return Players
+     */
     public Player[] getPlayers() {
         return players;
     }
 
+    /** 
+     * @return current Player whose turn it is
+     */
     public Player getCurrentTurn() {
         return currentTurn;
     }
 
+    /** 
+     * @return current Player whose turn it is not
+     */
     public Player getNotCurrentTurn() {
         return currentTurn.equals(players[0]) ? players[1] : players[0];
     }
 
+    /** 
+     * @return A history of all moves made in the past
+     */
     public List<Move> getMoveHistory() {
         return moveHistory;
     }
 
+    /** 
+     * @return starttime
+     */
     public int getStartTime() {
         return startTime;
     }
 
+    /** 
+     * @param startTime
+     */
     public void setStartTime(int startTime) {
         this.startTime = startTime * 60 * 1000;
         this.clock = new Clock(this.startTime);
     }
 
+    /** 
+     * @return is game muted
+     */
     public boolean isMute() {
         return mute;
     }
 
+    /** 
+     * @param mute
+     */
     public void setMute(boolean mute) {
         this.mute = mute;
     }
 
+    /** 
+     * @return current Board
+     */
     public Board getBoard() {
         return board;
     }
@@ -70,18 +97,31 @@ public class Game {
 
     public List<Piece> getCapturedBlack() { return capturedBlack; }
 
+    /** 
+     * @return current Clock
+     */
     public Clock getClock() {
         return clock;
     }
 
+    /** 
+     * @param clock
+     */
     public void setClock(Clock clock) {
         this.clock = clock;
     }
 
+    /** 
+     * set turn
+     * @param currentTurn
+     */
     public void setCurrentTurn(Player currentTurn) {
         this.currentTurn = currentTurn;
     }
 
+    /**
+     * toggle turn between both players
+     */
     public void switchTurn(){
         if (currentTurn == players[0]){
             currentTurn = players[1];
@@ -90,6 +130,9 @@ public class Game {
         }
     }
 
+    /**
+     * start the game
+     */
     public void startGame() {
         this.board = new Board(players, false, this);
 
@@ -103,14 +146,25 @@ public class Game {
         this.clock.reset();
     }
 
+    /**
+     * restart the game
+     */
     public void restartGame() {
         startGame();
     }
 
+    /** 
+     * add move made to the move-history
+     * @param move
+     */
     public void addMoveToHistory(Move move) {
         moveHistory.add(move);
     }
 
+    /** 
+     * add a captured piece to the designated list
+     * @param p
+     */
     public void addCapturedPiece(Piece p) {
         // tiefkopierte Boards dürfen NICHT capturen
         if (this.board.isSimulation) return;
@@ -126,6 +180,9 @@ public class Game {
         }
     }
 
+    /**
+     * undo the last move made
+     */
     public void undoLastMove() {
         if (moveHistory.isEmpty()) return;
 
